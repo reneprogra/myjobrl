@@ -45,7 +45,7 @@ export default function FAQSection() {
   }
 
   return (
-    <section id="faq" className="bg-black py-28 md:py-40 px-6">
+    <section id="faq" className="bg-black py-20 md:py-40 px-4 md:px-6">
       <div className="max-w-4xl mx-auto" ref={ref}>
         <motion.h2
           initial={{ opacity: 0, y: 30 }}
@@ -67,7 +67,7 @@ export default function FAQSection() {
             >
               <button
                 onClick={() => toggle(i)}
-                className="w-full flex items-center justify-between px-6 py-5 text-left"
+                className="w-full flex items-center justify-between px-5 py-4 md:px-6 md:py-5 text-left min-h-[56px]"
               >
                 <span className="text-white font-medium text-sm md:text-base pr-4">{faq.q}</span>
                 {openIndex === i ? (
@@ -87,7 +87,7 @@ export default function FAQSection() {
                     transition={{ duration: 0.3, ease: "easeInOut" }}
                     style={{ overflow: "hidden" }}
                   >
-                    <p className="px-6 pb-5 text-white/60 text-sm leading-relaxed pt-0">
+                    <p className="px-5 pb-5 md:px-6 text-white/60 text-sm leading-relaxed pt-0">
                       {faq.a}
                     </p>
                   </motion.div>

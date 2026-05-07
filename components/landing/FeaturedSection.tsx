@@ -9,13 +9,13 @@ export default function FeaturedSection() {
   const inView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section className="bg-black pt-6 md:pt-10 pb-20 md:pb-32 px-6 overflow-hidden">
+    <section className="bg-black pt-6 md:pt-10 pb-16 md:pb-32 px-4 md:px-6 overflow-hidden">
       <div className="max-w-6xl mx-auto" ref={ref}>
         <motion.div
           initial={{ opacity: 0, y: 60 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.9 }}
-          className="rounded-3xl overflow-hidden aspect-video relative"
+          className="rounded-3xl overflow-hidden aspect-[4/3] md:aspect-video relative"
         >
           <Image
             src="/images/app-mockup.png"

@@ -27,7 +27,7 @@ export default function ServicesSection() {
   const inView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section id="como-funciona" className="bg-black py-28 md:py-40 px-6 overflow-hidden">
+    <section id="como-funciona" className="bg-black py-20 md:py-40 px-4 md:px-6 overflow-hidden">
       <div className="bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.02)_0%,_transparent_60%)]">
         <div className="max-w-6xl mx-auto" ref={ref}>
           {/* Header */}

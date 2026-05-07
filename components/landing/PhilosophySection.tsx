@@ -9,13 +9,13 @@ export default function PhilosophySection() {
   const inView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section id="philosophy" className="bg-black py-28 md:py-40 px-6 overflow-hidden">
+    <section id="philosophy" className="bg-black py-20 md:py-40 px-4 md:px-6 overflow-hidden">
       <div className="max-w-6xl mx-auto" ref={ref}>
         <motion.h2
           initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="text-5xl md:text-7xl lg:text-8xl text-white tracking-tight mb-16 md:mb-24 text-center"
+          className="text-4xl md:text-7xl lg:text-8xl text-white tracking-tight mb-14 md:mb-24 text-center"
         >
           Workers{" "}
           <em
@@ -41,7 +41,7 @@ export default function PhilosophySection() {
               width={400}
               height={800}
               loading="lazy"
-              className="w-full h-auto rounded-2xl mx-auto max-w-[280px] block"
+              className="w-full h-auto rounded-2xl mx-auto max-w-[240px] block"
             />
             <p className="text-white/40 text-xs tracking-widest uppercase mb-3 mt-6">Para Workers</p>
             <p className="text-white/70 text-sm md:text-base leading-relaxed">
@@ -62,7 +62,7 @@ export default function PhilosophySection() {
               width={400}
               height={800}
               loading="lazy"
-              className="w-full h-auto rounded-2xl mx-auto max-w-[280px] block"
+              className="w-full h-auto rounded-2xl mx-auto max-w-[240px] block"
             />
             <p className="text-white/40 text-xs tracking-widest uppercase mb-3 mt-6">Para Clientes</p>
             <p className="text-white/70 text-sm md:text-base leading-relaxed">

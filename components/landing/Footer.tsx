@@ -15,7 +15,7 @@ const links = [
 
 export default function Footer() {
   return (
-    <footer className="bg-black border-t border-white/5 py-16 px-6">
+    <footer className="bg-black border-t border-white/5 py-14 px-4 md:px-6">
       <div className="max-w-6xl mx-auto">
         {/* Main grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-0">
@@ -57,7 +57,7 @@ export default function Footer() {
                 <button
                   key={link.label}
                   onClick={() => scrollTo(link.id)}
-                  className="text-white/40 hover:text-white text-sm transition-colors"
+                  className="text-white/40 hover:text-white text-sm transition-colors py-2 min-h-[44px] flex items-center"
                 >
                   {link.label}
                 </button>
