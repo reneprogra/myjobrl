@@ -1,0 +1,187 @@
+import { createClient } from '@/lib/supabase/server'
+import { redirect, notFound } from 'next/navigation'
+import Link from 'next/link'
+import StarRating from '@/components/StarRating'
+import ShiftActions from './ShiftActions'
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr + 'T00:00:00')
+  return d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+function formatTime(t: string) {
+  const [h, m] = t.split(':')
+  const hour = parseInt(h)
+  const ampm = hour >= 12 ? 'PM' : 'AM'
+  const h12 = hour % 12 || 12
+  return `${h12}:${m} ${ampm}`
+}
+
+export default async function ShiftDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: shift } = await supabase
+    .from('shifts')
+    .select('*, categories(*), profiles(*)')
+    .eq('id', id)
+    .single()
+
+  if (!shift) notFound()
+
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+
+  const isClient = shift.client_id === user.id
+
+  // Get applications
+  const { data: applications } = isClient
+    ? await supabase
+        .from('applications')
+        .select('*, profiles(*)')
+        .eq('shift_id', id)
+        .order('created_at', { ascending: false })
+    : await supabase
+        .from('applications')
+        .select('*')
+        .eq('shift_id', id)
+        .eq('worker_id', user.id)
+        .single().then(r => ({ data: r.data ? [r.data] : [] }))
+
+  const myApplication = !isClient ? (applications as any[])?.[0] : null
+
+  const statusColors: Record<string, { bg: string; text: string; label: string }> = {
+    open: { bg: '#DCFCE7', text: '#166534', label: 'Abierto' },
+    assigned: { bg: '#DBEAFE', text: '#1E40AF', label: 'Asignado' },
+    completed: { bg: '#F3F4F6', text: '#374151', label: 'Completado' },
+    cancelled: { bg: '#FEE2E2', text: '#991B1B', label: 'Cancelado' },
+  }
+
+  const sc = statusColors[shift.status] || statusColors.open
+
+  return (
+    <div className="pb-8">
+      {/* Header */}
+      <div
+        className="px-4 pt-6 pb-6"
+        style={{ background: '#1A1A1A', color: '#FFFFFF' }}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <Link
+            href="/shifts"
+            className="p-2 rounded-xl"
+            style={{ background: 'rgba(255,255,255,0.1)' }}
+          >
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </Link>
+          <span
+            className="text-xs font-medium px-2 py-0.5 rounded-full"
+            style={{ background: sc.bg, color: sc.text }}
+          >
+            {sc.label}
+          </span>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <span className="text-4xl">{shift.categories?.emoji}</span>
+          <div>
+            <h1
+              className="text-2xl font-bold leading-tight"
+              style={{ fontFamily: 'var(--font-syne)' }}
+            >
+              {shift.title}
+            </h1>
+            <p className="text-sm mt-1 opacity-70">{shift.categories?.name}</p>
+          </div>
+        </div>
+
+        {/* Pay */}
+        <div className="mt-4 flex items-center gap-2">
+          <span className="text-3xl font-bold" style={{ fontFamily: 'var(--font-syne)' }}>
+            ${shift.pay_amount.toLocaleString('es-MX')}
+          </span>
+          <span className="text-sm opacity-60">{shift.pay_currency}</span>
+        </div>
+      </div>
+
+      <div className="px-4 mt-4 flex flex-col gap-4">
+        {/* Info cards */}
+        <div className="grid grid-cols-2 gap-3">
+          <InfoCard icon="📅" label="Fecha" value={formatDate(shift.shift_date)} />
+          <InfoCard icon="🕐" label="Horario" value={`${formatTime(shift.shift_start)} – ${formatTime(shift.shift_end)}`} />
+          <InfoCard icon="📍" label="Ciudad" value={`${shift.city}${shift.state ? `, ${shift.state}` : ''}`} />
+          <InfoCard icon="👥" label="Cupos" value={`${shift.slots} trabajador${shift.slots > 1 ? 'es' : ''}`} />
+        </div>
+
+        {/* Address */}
+        <div className="p-4 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+          <div className="flex items-center gap-2 mb-1">
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            <span className="text-sm font-medium" style={{ color: '#1A1A1A' }}>Dirección</span>
+          </div>
+          <p className="text-sm" style={{ color: '#6B6860' }}>{shift.location_address}</p>
+        </div>
+
+        {/* Description */}
+        {shift.description && (
+          <div className="p-4 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+            <h3 className="text-sm font-semibold mb-2" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+              Descripción
+            </h3>
+            <p className="text-sm leading-relaxed" style={{ color: '#6B6860' }}>{shift.description}</p>
+          </div>
+        )}
+
+        {/* Client info (for workers) */}
+        {!isClient && shift.profiles && (
+          <div className="p-4 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+            <h3 className="text-sm font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+              Cliente
+            </h3>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
+                style={{ background: '#F0EDE6', color: '#1A1A1A' }}>
+                {shift.profiles.full_name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div className="font-medium text-sm" style={{ color: '#1A1A1A' }}>
+                  {shift.profiles.full_name}
+                  {shift.profiles.is_verified && (
+                    <span className="ml-1.5 text-xs font-medium" style={{ color: '#1877F2' }}>✓ Verificado</span>
+                  )}
+                </div>
+                {shift.profiles.rating > 0 && (
+                  <StarRating rating={shift.profiles.rating} size={12} showValue count={shift.profiles.rating_count} />
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <ShiftActions
+          shift={shift}
+          isClient={isClient}
+          currentUserId={user.id}
+          myApplication={myApplication}
+          applications={isClient ? applications as any[] : []}
+        />
+      </div>
+    </div>
+  )
+}
+
+function InfoCard({ icon, label, value }: { icon: string; label: string; value: string }) {
+  return (
+    <div className="p-3 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+      <div className="text-base mb-0.5">{icon}</div>
+      <div className="text-xs" style={{ color: '#6B6860' }}>{label}</div>
+      <div className="text-sm font-medium mt-0.5" style={{ color: '#1A1A1A' }}>{value}</div>
+    </div>
+  )
+}
