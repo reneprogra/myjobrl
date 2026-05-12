@@ -67,11 +67,11 @@ async function ClientDashboard({ userId, profile }: { userId: string; profile: a
         <div>
           <h1
             className="text-2xl font-bold"
-            style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}
+            style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}
           >
             Hola, {profile.full_name.split(' ')[0]} 👋
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: '#6B6860' }}>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--muted)' }}>
             Panel de cliente
           </p>
         </div>
@@ -95,12 +95,12 @@ async function ClientDashboard({ userId, profile }: { userId: string; profile: a
           <div
             key={stat.label}
             className="p-3 rounded-2xl text-center"
-            style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
           >
             <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: stat.color }}>
               {stat.value}
             </div>
-            <div className="text-xs mt-0.5" style={{ color: '#6B6860' }}>{stat.label}</div>
+            <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{stat.label}</div>
           </div>
         ))}
       </div>
@@ -130,18 +130,18 @@ async function ClientDashboard({ userId, profile }: { userId: string; profile: a
       {/* Active shifts */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+          <h2 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
             Turnos activos
           </h2>
-          <Link href="/shifts" className="text-sm" style={{ color: '#6B6860' }}>Ver todos</Link>
+          <Link href="/shifts" className="text-sm" style={{ color: 'var(--muted)' }}>Ver todos</Link>
         </div>
         {activeShifts.length === 0 ? (
           <div
             className="p-6 rounded-2xl text-center"
-            style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
           >
             <div className="text-3xl mb-2">📋</div>
-            <p className="text-sm" style={{ color: '#6B6860' }}>No tienes turnos activos</p>
+            <p className="text-sm" style={{ color: 'var(--muted)' }}>No tienes turnos activos</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -156,7 +156,7 @@ async function ClientDashboard({ userId, profile }: { userId: string; profile: a
       {expiredShifts.length > 0 && (
         <div
           className="mb-6 px-4 py-3 rounded-2xl flex items-center justify-between"
-          style={{ background: '#F3F4F6', border: '1px solid #E5E2DB' }}
+          style={{ background: '#F3F4F6', border: '1px solid var(--border)' }}
         >
           <span className="text-sm" style={{ color: '#6B7280' }}>
             {expiredShifts.length} turno{expiredShifts.length > 1 ? 's' : ''} vencido{expiredShifts.length > 1 ? 's' : ''}
@@ -170,7 +170,7 @@ async function ClientDashboard({ userId, profile }: { userId: string; profile: a
       {/* Recent completed */}
       {pastShifts.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+          <h2 className="text-lg font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
             Historial reciente
           </h2>
           <div className="flex flex-col gap-3">
@@ -183,13 +183,13 @@ async function ClientDashboard({ userId, profile }: { userId: string; profile: a
 
       {/* Available groups */}
       <div>
-        <h2 className="text-lg font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+        <h2 className="text-lg font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
           Grupos disponibles
         </h2>
         {(availableGroups?.length || 0) === 0 ? (
-          <div className="p-6 rounded-2xl text-center" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+          <div className="p-6 rounded-2xl text-center" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
             <div className="text-3xl mb-2">👥</div>
-            <p className="text-sm" style={{ color: '#6B6860' }}>No hay grupos disponibles en tu zona</p>
+            <p className="text-sm" style={{ color: 'var(--muted)' }}>No hay grupos disponibles en tu zona</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -197,21 +197,21 @@ async function ClientDashboard({ userId, profile }: { userId: string; profile: a
               <div
                 key={group.id}
                 className="p-4 rounded-2xl"
-                style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}
+                style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xl">{group.categories?.emoji}</span>
-                      <h3 className="font-semibold text-base" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+                      <h3 className="font-semibold text-base" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
                         {group.name}
                       </h3>
                     </div>
-                    <div className="flex items-center gap-3 text-sm" style={{ color: '#6B6860' }}>
+                    <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--muted)' }}>
                       <span>📍 {group.city}</span>
                       <span>👥 {group.member_count} miembros</span>
                     </div>
-                    <div className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
+                    <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                       {group.categories?.name}
                     </div>
                   </div>
@@ -306,10 +306,10 @@ async function WorkerDashboard({ userId, profile }: { userId: string; profile: a
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+          <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
             Hola, {profile.full_name.split(' ')[0]} 👋
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: '#6B6860' }}>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--muted)' }}>
             {profile.city || 'Worker'}
           </p>
         </div>
@@ -332,11 +332,11 @@ async function WorkerDashboard({ userId, profile }: { userId: string; profile: a
           { label: 'Calificación', value: profile.rating > 0 ? profile.rating.toFixed(1) : '–', color: '#F59E0B' },
           { label: 'Reseñas', value: profile.rating_count, color: '#1877F2' },
         ].map(stat => (
-          <div key={stat.label} className="p-3 rounded-2xl text-center" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+          <div key={stat.label} className="p-3 rounded-2xl text-center" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
             <div className="text-xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: stat.color }}>
               {stat.value}
             </div>
-            <div className="text-xs mt-0.5" style={{ color: '#6B6860' }}>{stat.label}</div>
+            <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{stat.label}</div>
           </div>
         ))}
       </div>
@@ -356,15 +356,15 @@ async function WorkerDashboard({ userId, profile }: { userId: string; profile: a
       {/* Open shifts */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+          <h2 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
             Turnos disponibles
           </h2>
-          <Link href="/shifts" className="text-sm" style={{ color: '#6B6860' }}>Ver todos</Link>
+          <Link href="/shifts" className="text-sm" style={{ color: 'var(--muted)' }}>Ver todos</Link>
         </div>
         {openShifts.length === 0 ? (
-          <div className="p-6 rounded-2xl text-center" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+          <div className="p-6 rounded-2xl text-center" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
             <div className="text-3xl mb-2">🔍</div>
-            <p className="text-sm" style={{ color: '#6B6860' }}>No hay turnos disponibles en tu zona</p>
+            <p className="text-sm" style={{ color: 'var(--muted)' }}>No hay turnos disponibles en tu zona</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -379,10 +379,10 @@ async function WorkerDashboard({ userId, profile }: { userId: string; profile: a
       {(applications?.length || 0) > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+            <h2 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
               Mis aplicaciones
             </h2>
-            <Link href="/applications" className="text-sm" style={{ color: '#6B6860' }}>Ver todas</Link>
+            <Link href="/applications" className="text-sm" style={{ color: 'var(--muted)' }}>Ver todas</Link>
           </div>
           <div className="flex flex-col gap-3">
             {applications!.slice(0, 3).map((app: Application) => (

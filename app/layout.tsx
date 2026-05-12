@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Syne, DM_Sans, Instrument_Serif } from "next/font/google";
+import ThemeProvider from "@/components/ThemeProvider";
 import "./globals.css";
 
 const syne = Syne({
@@ -44,12 +45,11 @@ export default function RootLayout({
     >
       <head>
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        {/* Anti-FOUC: apply dark class before first paint */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}})()` }} />
       </head>
-      <body
-        className="min-h-full antialiased"
-        style={{ fontFamily: "var(--font-dm-sans), sans-serif", background: "#F8F6F1", color: "#1A1A1A" }}
-      >
-        {children}
+      <body className="min-h-full antialiased">
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

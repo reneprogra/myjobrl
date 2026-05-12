@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --color-background: #F8F6F1;
   --color-foreground: #1A1A1A;
@@ -8,16 +11,50 @@
   --color-border: #E5E2DB;
   --color-muted: #6B6860;
   --color-muted-bg: #F0EDE6;
+
+  /* Font families — use font-syne, font-dm-sans, font-instrument-serif as Tailwind classes */
+  --font-family-syne: var(--font-syne), sans-serif;
+  --font-family-dm-sans: var(--font-dm-sans), sans-serif;
+  --font-family-instrument-serif: var(--font-instrument-serif), serif;
 }
 
+/* ─── Semantic color tokens (dark-mode aware) ─── */
 :root {
-  --background: #F8F6F1;
-  --foreground: #1A1A1A;
+  --bg:           #F8F6F1;
+  --card:         #FFFFFF;
+  --secondary-bg: #F0EDE6;
+  --border:       #E5E2DB;
+  --fg:           #1A1A1A;
+  --muted:        #6B6860;
+  --text-muted:   #9CA3AF;
+  --nav-bg:       #FFFFFF;
+  --nav-border:   #E5E2DB;
+  --input-bg:     #FFFFFF;
+  --section-bg:   #FFFFFF;
+}
+
+.dark {
+  --bg:           #0A0A0A;
+  --card:         #141414;
+  --secondary-bg: #1C1C1C;
+  --border:       #2A2A2A;
+  --fg:           #FFFFFF;
+  --muted:        #A0A0A0;
+  --text-muted:   #555555;
+  --nav-bg:       #111111;
+  --nav-border:   #222222;
+  --input-bg:     #1C1C1C;
+  --section-bg:   #141414;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-dm-sans), sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-syne), sans-serif;
 }
 
 /* Scrollbar */

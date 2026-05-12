@@ -87,13 +87,13 @@ export default function WorkerAvailabilityToggle({ workerId }: { workerId: strin
   if (!initialised) return null
 
   return (
-    <div className="mb-6 p-4 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+    <div className="mb-6 p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="font-semibold text-sm" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+          <div className="font-semibold text-sm" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
             Estoy disponible
           </div>
-          <div className="text-xs mt-0.5" style={{ color: '#6B6860' }}>
+          <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
             {available
               ? '📡 Compartiendo tu ubicación en tiempo real'
               : 'Activa para recibir solicitudes cercanas a ti'}

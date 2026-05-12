@@ -156,7 +156,7 @@ export default function ChatThread({ conversationId, currentUserId, initialMessa
         {messages.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
             <div className="text-4xl mb-3">👋</div>
-            <p className="text-sm" style={{ color: '#6B6860' }}>
+            <p className="text-sm" style={{ color: 'var(--muted)' }}>
               Sé el primero en enviar un mensaje a {otherPerson.full_name}
             </p>
           </div>
@@ -167,7 +167,7 @@ export default function ChatThread({ conversationId, currentUserId, initialMessa
             {/* Date separator */}
             <div className="flex items-center gap-3 my-3">
               <div className="flex-1 h-px" style={{ background: '#E5E2DB' }} />
-              <span className="text-xs px-2" style={{ color: '#9CA3AF' }}>{date}</span>
+              <span className="text-xs px-2" style={{ color: 'var(--text-muted)' }}>{date}</span>
               <div className="flex-1 h-px" style={{ background: '#E5E2DB' }} />
             </div>
 
@@ -194,7 +194,7 @@ export default function ChatThread({ conversationId, currentUserId, initialMessa
                         ) : (
                           <div
                             className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
-                            style={{ background: '#F0EDE6', color: '#1A1A1A' }}
+                            style={{ background: 'var(--secondary-bg)', color: 'var(--fg)' }}
                           >
                             {otherPerson.full_name.charAt(0).toUpperCase()}
                           </div>
@@ -209,12 +209,12 @@ export default function ChatThread({ conversationId, currentUserId, initialMessa
                       style={
                         isMe
                           ? { background: '#1A1A1A', color: '#FFFFFF', borderBottomRightRadius: 4 }
-                          : { background: '#FFFFFF', color: '#1A1A1A', border: '1px solid #E5E2DB', borderBottomLeftRadius: 4 }
+                          : { background: 'var(--card)', color: 'var(--fg)', border: '1px solid var(--border)', borderBottomLeftRadius: 4 }
                       }
                     >
                       {msg.content}
                     </div>
-                    <span className="text-xs mt-0.5 px-1" style={{ color: '#9CA3AF' }}>
+                    <span className="text-xs mt-0.5 px-1" style={{ color: 'var(--text-muted)' }}>
                       {formatMsgTime(msg.created_at)}
                       {isMe && (
                         <span className="ml-1">{msg.read ? ' ✓✓' : ' ✓'}</span>
@@ -233,7 +233,7 @@ export default function ChatThread({ conversationId, currentUserId, initialMessa
       {/* Input */}
       <div
         className="px-4 py-3 flex items-end gap-3"
-        style={{ background: '#FFFFFF', borderTop: '1px solid #E5E2DB' }}
+        style={{ background: 'var(--card)', borderTop: '1px solid #E5E2DB' }}
       >
         <textarea
           ref={inputRef}
@@ -244,9 +244,9 @@ export default function ChatThread({ conversationId, currentUserId, initialMessa
           rows={1}
           className="flex-1 px-4 py-2.5 rounded-2xl text-sm outline-none resize-none"
           style={{
-            background: '#F8F6F1',
+            background: 'var(--bg)',
             border: '1.5px solid #E5E2DB',
-            color: '#1A1A1A',
+            color: 'var(--fg)',
             fontFamily: 'var(--font-dm-sans)',
             maxHeight: 120,
           }}

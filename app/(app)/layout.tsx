@@ -1,4 +1,5 @@
 import BottomNav from '@/components/BottomNav'
+import PageTransition from '@/components/PageTransition'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
@@ -24,10 +25,10 @@ export default async function AppLayout({
   const userType = profile?.user_type || 'worker'
 
   return (
-    <div className="min-h-screen" style={{ background: '#F8F6F1' }}>
+    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
       <header
         className="sticky top-0 z-10 flex items-center gap-2 px-4 h-14 max-w-lg mx-auto"
-        style={{ background: '#F8F6F1', borderBottom: '1px solid #E5E2DB' }}
+        style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}
       >
         <Image
           src="/logo.png"
@@ -38,13 +39,13 @@ export default async function AppLayout({
         />
         <span
           className="text-lg font-bold"
-          style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}
+          style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}
         >
           MyJob
         </span>
       </header>
       <main className="pb-24 max-w-lg mx-auto">
-        {children}
+        <PageTransition>{children}</PageTransition>
       </main>
       <BottomNav userType={userType} />
     </div>

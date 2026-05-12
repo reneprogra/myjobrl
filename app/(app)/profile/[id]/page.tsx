@@ -3,6 +3,8 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import StarRating from '@/components/StarRating'
 import PortfolioUploader from '@/components/PortfolioUploader'
+import PortfolioGrid from '@/components/PortfolioGrid'
+import AvatarUpload from '@/components/AvatarUpload'
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -34,13 +36,35 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     .order('created_at', { ascending: false })
     .limit(6)
 
-  // Get reviews
+  // Get reviews for display (latest 10)
   const { data: reviews } = await supabase
     .from('reviews')
     .select('*, profiles!reviews_reviewer_id_fkey(*)')
     .eq('reviewed_id', id)
     .order('created_at', { ascending: false })
     .limit(10)
+
+  // Real count and average directly from reviews table (source of truth)
+  const { data: allRatings } = await supabase
+    .from('reviews')
+    .select('rating')
+    .eq('reviewed_id', id)
+
+  const realReviewCount = allRatings?.length ?? 0
+  const realAvgRating = realReviewCount > 0
+    ? allRatings!.reduce((sum, r) => sum + r.rating, 0) / realReviewCount
+    : 0
+
+  // Sync profile if values are out of date
+  if (
+    realReviewCount !== profile.rating_count ||
+    (realReviewCount > 0 && Math.abs(parseFloat(realAvgRating.toFixed(2)) - profile.rating) > 0.01)
+  ) {
+    await supabase.from('profiles').update({
+      rating_count: realReviewCount,
+      rating: realReviewCount > 0 ? parseFloat(realAvgRating.toFixed(2)) : 0,
+    }).eq('id', id)
+  }
 
   // Completed shifts count
   const { count: completedCount } = await supabase
@@ -78,16 +102,24 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
         {/* Avatar */}
         <div className="flex items-start gap-4">
-          <div
-            className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold flex-shrink-0 overflow-hidden"
-            style={{ background: '#F0EDE6', color: '#1A1A1A' }}
-          >
-            {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-            ) : (
-              profile.full_name.charAt(0).toUpperCase()
-            )}
-          </div>
+          {isOwn && profile.user_type === 'worker' ? (
+            <AvatarUpload
+              userId={id}
+              initialAvatarUrl={profile.avatar_url}
+              displayName={profile.full_name}
+            />
+          ) : (
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold flex-shrink-0 overflow-hidden"
+              style={{ background: 'var(--secondary-bg)', color: 'var(--fg)' }}
+            >
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                profile.full_name.charAt(0).toUpperCase()
+              )}
+            </div>
+          )}
           <div className="flex-1 pt-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-bold" style={{ fontFamily: 'var(--font-syne)' }}>
@@ -122,13 +154,13 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-syne)' }}>
-              {profile.rating > 0 ? profile.rating.toFixed(1) : '–'}
+              {realAvgRating > 0 ? realAvgRating.toFixed(1) : '–'}
             </div>
             <div className="text-xs opacity-60">Calificación</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-syne)' }}>
-              {profile.rating_count}
+              {realReviewCount}
             </div>
             <div className="text-xs opacity-60">Reseñas</div>
           </div>
@@ -139,7 +171,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         {/* Service categories */}
         {workerCats && workerCats.length > 0 && (
           <div>
-            <h2 className="text-base font-semibold mb-2" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+            <h2 className="text-base font-semibold mb-2" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
               Servicios
             </h2>
             <div className="flex flex-wrap gap-2">
@@ -169,48 +201,34 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             />
           ) : (
             <div>
-              <h2 className="text-base font-semibold mb-2" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+              <h2 className="text-base font-semibold mb-2" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
                 Portafolio
               </h2>
-              {photos && photos.length > 0 ? (
-                <div className="grid grid-cols-3 gap-1.5">
-                  {photos.map((photo: any) => (
-                    <div
-                      key={photo.id}
-                      className="aspect-square rounded-xl overflow-hidden"
-                      style={{ background: '#F0EDE6' }}
-                    >
-                      <img src={photo.photo_url} alt={photo.caption || ''} className="w-full h-full object-cover" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div
-                  className="p-6 rounded-2xl text-center"
-                  style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}
-                >
-                  <div className="text-3xl mb-2">📸</div>
-                  <p className="text-sm" style={{ color: '#6B6860' }}>Sin fotos de portafolio</p>
-                </div>
-              )}
+              <PortfolioGrid
+                photos={(photos || []).map((p: any) => ({
+                  id: p.id,
+                  photo_url: p.photo_url,
+                  caption: p.caption,
+                }))}
+              />
             </div>
           )
         )}
 
         {/* Reviews — workers only */}
         {profile.user_type === 'worker' && <div>
-          <h2 className="text-base font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
-            Reseñas ({profile.rating_count})
+          <h2 className="text-base font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
+            Reseñas ({realReviewCount})
           </h2>
-          {profile.rating > 0 && (
-            <div className="flex items-center gap-3 mb-4 p-4 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
-              <div className="text-4xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
-                {profile.rating.toFixed(1)}
+          {realAvgRating > 0 && (
+            <div className="flex items-center gap-3 mb-4 p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+              <div className="text-4xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
+                {realAvgRating.toFixed(1)}
               </div>
               <div>
-                <StarRating rating={profile.rating} size={18} />
-                <div className="text-xs mt-1" style={{ color: '#6B6860' }}>
-                  {profile.rating_count} reseña{profile.rating_count !== 1 ? 's' : ''}
+                <StarRating rating={realAvgRating} size={18} />
+                <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                  {realReviewCount} reseña{realReviewCount !== 1 ? 's' : ''}
                 </div>
               </div>
             </div>
@@ -218,34 +236,34 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           {reviews && reviews.length > 0 ? (
             <div className="flex flex-col gap-3">
               {reviews.map((review: any) => (
-                <div key={review.id} className="p-4 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+                <div key={review.id} className="p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ background: '#F0EDE6', color: '#1A1A1A' }}
+                        style={{ background: 'var(--secondary-bg)', color: 'var(--fg)' }}
                       >
                         {review.profiles?.full_name?.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-sm font-medium" style={{ color: '#1A1A1A' }}>
+                      <span className="text-sm font-medium" style={{ color: 'var(--fg)' }}>
                         {review.profiles?.full_name}
                       </span>
                     </div>
                     <StarRating rating={review.rating} size={14} />
                   </div>
                   {review.comment && (
-                    <p className="text-sm leading-relaxed" style={{ color: '#6B6860' }}>{review.comment}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--muted)' }}>{review.comment}</p>
                   )}
-                  <p className="text-xs mt-2" style={{ color: '#9CA3AF' }}>
+                  <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
                     {new Date(review.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="p-6 rounded-2xl text-center" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+            <div className="p-6 rounded-2xl text-center" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
               <div className="text-3xl mb-2">⭐</div>
-              <p className="text-sm" style={{ color: '#6B6860' }}>Sin reseñas aún</p>
+              <p className="text-sm" style={{ color: 'var(--muted)' }}>Sin reseñas aún</p>
             </div>
           )}
         </div>}

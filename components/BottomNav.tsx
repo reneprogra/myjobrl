@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 
 interface NavItem {
@@ -165,7 +166,7 @@ export default function BottomNav({ userType }: { userType: string }) {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 border-t"
-      style={{ background: '#FFFFFF', borderColor: '#E5E2DB' }}
+      style={{ background: 'var(--nav-bg)', borderColor: 'var(--nav-border)' }}
     >
       <div className="flex items-center justify-around px-2 py-2 max-w-lg mx-auto"
         style={{ paddingBottom: `calc(env(safe-area-inset-bottom) + 0.5rem)` }}>
@@ -176,19 +177,36 @@ export default function BottomNav({ userType }: { userType: string }) {
               key={item.href}
               href={item.href}
               prefetch={true}
-              className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all relative"
-              style={{ color: isActive ? '#1A1A1A' : '#6B6860' }}
+              className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl relative"
+              style={{ color: isActive ? 'var(--fg)' : 'var(--muted)' }}
             >
               <div className="relative">
-                {isActive ? item.activeIcon : item.icon}
-                {item.badge != null && item.badge > 0 && (
-                  <span
-                    className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center text-white font-bold"
-                    style={{ background: '#EF4444', fontSize: 9, lineHeight: 1 }}
-                  >
-                    {item.badge > 9 ? '9+' : item.badge}
-                  </span>
-                )}
+                {/* Bounce animation when tab becomes active */}
+                <motion.div
+                  key={isActive ? `${item.href}-on` : `${item.href}-off`}
+                  initial={isActive ? { scale: 0.65 } : { scale: 1 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+                >
+                  {isActive ? item.activeIcon : item.icon}
+                </motion.div>
+
+                {/* Badge pop animation when count changes */}
+                <AnimatePresence>
+                  {item.badge != null && item.badge > 0 && (
+                    <motion.span
+                      key={item.badge}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                      transition={{ type: 'spring', stiffness: 600, damping: 20 }}
+                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center text-white font-bold"
+                      style={{ background: '#EF4444', fontSize: 9, lineHeight: 1 }}
+                    >
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </div>
               <span className="text-xs font-medium" style={{ fontFamily: 'var(--font-dm-sans)' }}>
                 {item.label}

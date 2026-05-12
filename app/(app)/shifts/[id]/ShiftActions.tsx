@@ -188,8 +188,8 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
   if (!isClient) {
     if (shift.status !== 'open') {
       return (
-        <div className="p-4 rounded-2xl text-center" style={{ background: '#F0EDE6' }}>
-          <p className="text-sm" style={{ color: '#6B6860' }}>
+        <div className="p-4 rounded-2xl text-center" style={{ background: 'var(--secondary-bg)' }}>
+          <p className="text-sm" style={{ color: 'var(--muted)' }}>
             {myApplication?.status === 'accepted' ? '✅ Tu aplicación fue aceptada' :
              myApplication?.status === 'rejected' ? '❌ Tu aplicación fue rechazada' :
              'Este turno ya no está disponible'}
@@ -207,17 +207,17 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
       return (
         <div>
           <CountdownTimer createdAt={myApplication.created_at} />
-          <div className="p-4 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
-            <p className="text-sm font-medium" style={{ color: '#1A1A1A' }}>
+          <div className="p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <p className="text-sm font-medium" style={{ color: 'var(--fg)' }}>
               {appStatusLabels[myApplication.status]}
             </p>
             {myApplication.proposed_pay && (
-              <p className="text-xs mt-1" style={{ color: '#6B6860' }}>
+              <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
                 Contraoferta: ${myApplication.proposed_pay.toLocaleString('es-MX')} MXN
               </p>
             )}
             {myApplication.message && (
-              <p className="text-xs mt-1" style={{ color: '#6B6860' }}>
+              <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
                 Mensaje: {myApplication.message}
               </p>
             )}
@@ -228,12 +228,12 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
 
     if (showApplyForm) {
       return (
-        <div className="p-4 rounded-2xl flex flex-col gap-4" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
-          <h3 className="font-semibold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+        <div className="p-4 rounded-2xl flex flex-col gap-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+          <h3 className="font-semibold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
             Aplicar al turno
           </h3>
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#1A1A1A' }}>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--fg)' }}>
               Mensaje (opcional)
             </label>
             <textarea
@@ -242,11 +242,11 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
               rows={3}
               placeholder="Cuéntale al cliente sobre tu experiencia..."
               className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
-              style={{ background: '#F8F6F1', border: '1.5px solid #E5E2DB', color: '#1A1A1A', fontFamily: 'var(--font-dm-sans)' }}
+              style={{ background: 'var(--bg)', border: '1.5px solid #E5E2DB', color: 'var(--fg)', fontFamily: 'var(--font-dm-sans)' }}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#1A1A1A' }}>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--fg)' }}>
               Contraoferta de pago (opcional)
             </label>
             <input
@@ -255,14 +255,14 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
               onChange={e => setProposedPay(e.target.value)}
               placeholder={`Pago ofrecido: $${shift.pay_amount}`}
               className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-              style={{ background: '#F8F6F1', border: '1.5px solid #E5E2DB', color: '#1A1A1A', fontFamily: 'var(--font-dm-sans)' }}
+              style={{ background: 'var(--bg)', border: '1.5px solid #E5E2DB', color: 'var(--fg)', fontFamily: 'var(--font-dm-sans)' }}
             />
           </div>
           <div className="flex gap-3">
             <button
               onClick={() => setShowApplyForm(false)}
               className="flex-1 py-3 rounded-xl text-sm font-medium"
-              style={{ background: '#F0EDE6', color: '#1A1A1A' }}
+              style={{ background: 'var(--secondary-bg)', color: 'var(--fg)' }}
             >
               Cancelar
             </button>
@@ -322,16 +322,16 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
       {/* Applicants */}
       {applications && applications.length > 0 && (
         <div>
-          <h3 className="text-base font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+          <h3 className="text-base font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
             Aplicantes ({applications.length})
           </h3>
           <div className="flex flex-col gap-3">
             {applications.map((app: any) => (
-              <div key={app.id} className="p-4 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+              <div key={app.id} className="p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-3 mb-3">
                   <Link href={`/profile/${app.worker_id}`}>
                     <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold overflow-hidden"
-                      style={{ background: '#F0EDE6', color: '#1A1A1A' }}>
+                      style={{ background: 'var(--secondary-bg)', color: 'var(--fg)' }}>
                       {app.profiles?.avatar_url ? (
                         <img src={app.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -341,7 +341,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
                   </Link>
                   <div className="flex-1">
                     <Link href={`/profile/${app.worker_id}`}>
-                      <div className="font-medium text-sm" style={{ color: '#1A1A1A' }}>
+                      <div className="font-medium text-sm" style={{ color: 'var(--fg)' }}>
                         {app.profiles?.full_name}
                         {app.profiles?.is_verified && (
                           <span className="ml-1 text-xs" style={{ color: '#1877F2' }}>✓</span>
@@ -354,16 +354,16 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
                   </div>
                   {app.proposed_pay && (
                     <div className="text-right">
-                      <div className="text-sm font-semibold" style={{ color: '#1A1A1A' }}>
+                      <div className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>
                         ${app.proposed_pay.toLocaleString('es-MX')}
                       </div>
-                      <div className="text-xs" style={{ color: '#6B6860' }}>contraoferta</div>
+                      <div className="text-xs" style={{ color: 'var(--muted)' }}>contraoferta</div>
                     </div>
                   )}
                 </div>
 
                 {app.message && (
-                  <p className="text-xs mb-3 leading-relaxed" style={{ color: '#6B6860' }}>{app.message}</p>
+                  <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--muted)' }}>{app.message}</p>
                 )}
 
                 {app.status === 'pending' && shift.status !== 'cancelled' && (
@@ -407,7 +407,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
                       <button
                         onClick={() => setShowReviewForm(app.worker_id)}
                         className="text-xs font-medium underline"
-                        style={{ color: '#1A1A1A' }}
+                        style={{ color: 'var(--fg)' }}
                       >
                         Dejar reseña
                       </button>
@@ -425,7 +425,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
                 {showReviewForm === app.worker_id && (
                   <div className="mt-3 flex flex-col gap-3 pt-3" style={{ borderTop: '1px solid #E5E2DB' }}>
                     <div>
-                      <label className="block text-xs font-medium mb-2" style={{ color: '#1A1A1A' }}>Calificación</label>
+                      <label className="block text-xs font-medium mb-2" style={{ color: 'var(--fg)' }}>Calificación</label>
                       <div className="flex gap-2">
                         {[1, 2, 3, 4, 5].map(n => (
                           <button
@@ -445,10 +445,10 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
                       rows={2}
                       placeholder="Deja un comentario..."
                       className="w-full px-3 py-2 rounded-xl text-xs outline-none resize-none"
-                      style={{ background: '#F8F6F1', border: '1px solid #E5E2DB', color: '#1A1A1A' }}
+                      style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--fg)' }}
                     />
                     <div className="flex gap-2">
-                      <button onClick={() => setShowReviewForm(null)} className="flex-1 py-2 rounded-xl text-xs" style={{ background: '#F0EDE6' }}>
+                      <button onClick={() => setShowReviewForm(null)} className="flex-1 py-2 rounded-xl text-xs" style={{ background: 'var(--secondary-bg)' }}>
                         Cancelar
                       </button>
                       <button
@@ -469,9 +469,9 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
       )}
 
       {applications?.length === 0 && (
-        <div className="p-6 rounded-2xl text-center" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+        <div className="p-6 rounded-2xl text-center" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
           <div className="text-3xl mb-2">👀</div>
-          <p className="text-sm" style={{ color: '#6B6860' }}>Aún no hay aplicantes</p>
+          <p className="text-sm" style={{ color: 'var(--muted)' }}>Aún no hay aplicantes</p>
         </div>
       )}
     </div>

@@ -59,7 +59,7 @@ export default function WorkerShiftsClient({ shifts, workerCity }: { shifts: any
           <div
             key={i}
             className="h-28 rounded-2xl animate-pulse"
-            style={{ background: '#F0EDE6' }}
+            style={{ background: 'var(--secondary-bg)' }}
           />
         ))}
       </div>
@@ -72,11 +72,11 @@ export default function WorkerShiftsClient({ shifts, workerCity }: { shifts: any
         <div className="text-5xl mb-4">📍</div>
         <p
           className="text-lg font-semibold"
-          style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}
+          style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}
         >
           Activa tu ubicación para ver turnos cercanos
         </p>
-        <p className="text-sm mt-2" style={{ color: '#6B6860' }}>
+        <p className="text-sm mt-2" style={{ color: 'var(--muted)' }}>
           Necesitamos tu ubicación para mostrarte turnos dentro de {MAX_KM} km
         </p>
       </div>
@@ -89,11 +89,11 @@ export default function WorkerShiftsClient({ shifts, workerCity }: { shifts: any
         <div className="text-5xl mb-4">🔍</div>
         <p
           className="text-lg font-semibold"
-          style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}
+          style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}
         >
           Sin turnos cercanos
         </p>
-        <p className="text-sm mt-2" style={{ color: '#6B6860' }}>
+        <p className="text-sm mt-2" style={{ color: 'var(--muted)' }}>
           No hay turnos disponibles en un radio de {MAX_KM} km de tu ubicación
         </p>
       </div>

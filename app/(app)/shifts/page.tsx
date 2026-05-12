@@ -41,7 +41,7 @@ async function ClientShifts({ userId }: { userId: string }) {
   return (
     <div className="px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+        <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
           Mis turnos
         </h1>
         <Link
@@ -59,10 +59,10 @@ async function ClientShifts({ userId }: { userId: string }) {
       {shifts?.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="text-5xl mb-4">📋</div>
-          <p className="text-lg font-semibold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+          <p className="text-lg font-semibold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
             Sin turnos aún
           </p>
-          <p className="text-sm mt-2 mb-6" style={{ color: '#6B6860' }}>
+          <p className="text-sm mt-2 mb-6" style={{ color: 'var(--muted)' }}>
             Publica tu primer turno para encontrar trabajadores
           </p>
           <Link
@@ -109,11 +109,11 @@ function Section({
 }) {
   return (
     <div>
-      <h2 className="text-base font-semibold mb-3 flex items-center gap-2" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+      <h2 className="text-base font-semibold mb-3 flex items-center gap-2" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
         {title}
         <span
           className="text-xs font-medium px-2 py-0.5 rounded-full"
-          style={{ background: '#F0EDE6', color: '#6B6860' }}
+          style={{ background: 'var(--secondary-bg)', color: 'var(--muted)' }}
         >
           {count}
         </span>
@@ -154,7 +154,7 @@ async function WorkerShifts({ userId, profile }: { userId: string; profile: any 
 
   return (
     <div className="px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+      <h1 className="text-2xl font-bold mb-6" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
         Turnos disponibles
       </h1>
       <WorkerShiftsClient shifts={rawShifts || []} workerCity={profile.city || ''} />

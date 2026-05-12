@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useTheme } from '@/components/ThemeProvider'
 import Link from 'next/link'
 
 interface Props {
@@ -13,7 +14,7 @@ interface Props {
 function SectionHeader({ title }: { title: string }) {
   return (
     <div className="px-4 pt-5 pb-1">
-      <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#6B6860' }}>
+      <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
         {title}
       </h2>
     </div>
@@ -36,11 +37,11 @@ function SettingRow({ icon, label, value, onClick, danger, href }: {
     >
       <span className="text-base w-5 text-center flex-shrink-0">{icon}</span>
       <div className="flex-1">
-        <span className="text-sm" style={{ color: danger ? '#DC2626' : '#1A1A1A' }}>{label}</span>
-        {value && <div className="text-xs mt-0.5" style={{ color: '#6B6860' }}>{value}</div>}
+        <span className="text-sm" style={{ color: danger ? '#DC2626' : 'var(--fg)' }}>{label}</span>
+        {value && <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{value}</div>}
       </div>
       {!danger && (
-        <svg width="16" height="16" fill="none" stroke="#9CA3AF" strokeWidth="2" viewBox="0 0 24 24">
+        <svg width="16" height="16" fill="none" stroke="var(--text-muted)" strokeWidth="2" viewBox="0 0 24 24">
           <polyline points="9 18 15 12 9 6"/>
         </svg>
       )}
@@ -66,17 +67,17 @@ function ToggleRow({ icon, label, value, checked, onToggle }: {
     >
       <span className="text-base w-5 text-center flex-shrink-0">{icon}</span>
       <div className="flex-1">
-        <span className="text-sm" style={{ color: '#1A1A1A' }}>{label}</span>
-        {value && <div className="text-xs mt-0.5" style={{ color: '#6B6860' }}>{value}</div>}
+        <span className="text-sm" style={{ color: 'var(--fg)' }}>{label}</span>
+        {value && <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{value}</div>}
       </div>
       <div
         className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
-        style={{ background: checked ? '#1A1A1A' : '#E5E2DB' }}
+        style={{ background: checked ? 'var(--fg)' : 'var(--border)' }}
       >
         <div
           className="absolute top-0.5 w-5 h-5 rounded-full transition-transform"
           style={{
-            background: '#FFFFFF',
+            background: 'var(--card)',
             transform: checked ? 'translateX(1.25rem)' : 'translateX(0.125rem)',
           }}
         />
@@ -86,11 +87,12 @@ function ToggleRow({ icon, label, value, checked, onToggle }: {
 }
 
 function Divider() {
-  return <div style={{ height: '1px', background: '#F0EDE6', marginLeft: '3.25rem' }} />
+  return <div style={{ height: '1px', background: 'var(--border)', marginLeft: '3.25rem' }} />
 }
 
 export default function SettingsClient({ profile, email }: Props) {
   const router = useRouter()
+  const { theme, toggleTheme } = useTheme()
   const [editProfile, setEditProfile] = useState(false)
   const [changePassword, setChangePassword] = useState(false)
   const [fullName, setFullName] = useState(profile?.full_name || '')
@@ -196,39 +198,39 @@ export default function SettingsClient({ profile, email }: Props) {
   }
 
   const inputStyle = {
-    background: '#FFFFFF',
-    border: '1.5px solid #E5E2DB',
-    color: '#1A1A1A',
+    background: 'var(--input-bg)',
+    border: '1.5px solid var(--border)',
+    color: 'var(--fg)',
     fontFamily: 'var(--font-dm-sans)',
   }
 
   return (
-    <div className="pb-8" style={{ background: '#F8F6F1' }}>
+    <div className="pb-8" style={{ background: 'var(--bg)' }}>
       {/* Header */}
       <div className="px-4 pt-6 pb-4 flex items-center gap-3">
         <Link
           href={`/profile/${profile?.id}`}
           className="p-2 rounded-xl"
-          style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}
+          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
         >
           <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
         </Link>
-        <h1 className="text-xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+        <h1 className="text-xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
           Ajustes
         </h1>
       </div>
 
       {/* User summary */}
-      <div className="mx-4 mb-4 p-4 rounded-2xl flex items-center gap-3" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
-        <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold" style={{ background: '#1A1A1A', color: '#F8F6F1' }}>
+      <div className="mx-4 mb-4 p-4 rounded-2xl flex items-center gap-3" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+        <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold" style={{ background: 'var(--fg)', color: 'var(--bg)' }}>
           {profile?.full_name?.charAt(0).toUpperCase()}
         </div>
         <div>
-          <div className="font-semibold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>{profile?.full_name}</div>
-          <div className="text-sm" style={{ color: '#6B6860' }}>{email}</div>
-          <div className="text-xs mt-0.5" style={{ color: '#9CA3AF' }}>
+          <div className="font-semibold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>{profile?.full_name}</div>
+          <div className="text-sm" style={{ color: 'var(--muted)' }}>{email}</div>
+          <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
             {profile?.user_type === 'cliente' ? '💼 Cliente' : '🔧 Worker'}
           </div>
         </div>
@@ -242,48 +244,48 @@ export default function SettingsClient({ profile, email }: Props) {
 
       {/* Edit Profile Modal */}
       {editProfile && (
-        <div className="mx-4 mb-4 p-4 rounded-2xl flex flex-col gap-4" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
-          <h3 className="font-semibold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>Editar perfil</h3>
+        <div className="mx-4 mb-4 p-4 rounded-2xl flex flex-col gap-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+          <h3 className="font-semibold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>Editar perfil</h3>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#6B6860' }}>Nombre completo</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--muted)' }}>Nombre completo</label>
             <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={inputStyle} />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#6B6860' }}>Bio</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--muted)' }}>Bio</label>
             <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="Cuéntanos sobre ti..." className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none" style={inputStyle} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#6B6860' }}>Ciudad</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--muted)' }}>Ciudad</label>
               <input type="text" value={city} onChange={e => setCity(e.target.value)} className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={inputStyle} />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#6B6860' }}>Estado</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--muted)' }}>Estado</label>
               <input type="text" value={state} onChange={e => setState(e.target.value)} className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={inputStyle} />
             </div>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => setEditProfile(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ background: '#F0EDE6' }}>Cancelar</button>
-            <button onClick={handleSaveProfile} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: '#1A1A1A', color: '#FFFFFF', opacity: saving ? 0.6 : 1 }}>{saving ? 'Guardando...' : 'Guardar'}</button>
+            <button onClick={() => setEditProfile(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ background: 'var(--secondary-bg)', color: 'var(--fg)' }}>Cancelar</button>
+            <button onClick={handleSaveProfile} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: 'var(--fg)', color: 'var(--bg)', opacity: saving ? 0.6 : 1 }}>{saving ? 'Guardando...' : 'Guardar'}</button>
           </div>
         </div>
       )}
 
       {/* Change Password Modal */}
       {changePassword && (
-        <div className="mx-4 mb-4 p-4 rounded-2xl flex flex-col gap-4" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
-          <h3 className="font-semibold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>Cambiar contraseña</h3>
+        <div className="mx-4 mb-4 p-4 rounded-2xl flex flex-col gap-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+          <h3 className="font-semibold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>Cambiar contraseña</h3>
           <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Nueva contraseña" className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={inputStyle} />
           <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirmar contraseña" className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={inputStyle} />
           <div className="flex gap-3">
-            <button onClick={() => setChangePassword(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ background: '#F0EDE6' }}>Cancelar</button>
-            <button onClick={handleChangePassword} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: '#1A1A1A', color: '#FFFFFF', opacity: saving ? 0.6 : 1 }}>{saving ? 'Guardando...' : 'Cambiar'}</button>
+            <button onClick={() => setChangePassword(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ background: 'var(--secondary-bg)', color: 'var(--fg)' }}>Cancelar</button>
+            <button onClick={handleChangePassword} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: 'var(--fg)', color: 'var(--bg)', opacity: saving ? 0.6 : 1 }}>{saving ? 'Guardando...' : 'Cambiar'}</button>
           </div>
         </div>
       )}
 
       {/* Sections */}
-      <div className="mx-4 rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+      <div className="mx-4 rounded-2xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
         <SectionHeader title="Cuenta" />
         <SettingRow icon="👤" label="Editar perfil" value={profile?.full_name} onClick={() => { setEditProfile(true); setChangePassword(false) }} />
         <Divider />
@@ -292,7 +294,18 @@ export default function SettingsClient({ profile, email }: Props) {
         <SettingRow icon="✅" label="Verificación de identidad" value="Próximamente" onClick={() => {}} />
       </div>
 
-      <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+      <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+        <SectionHeader title="Apariencia" />
+        <ToggleRow
+          icon="🌙"
+          label="Modo oscuro"
+          value={theme === 'dark' ? 'Activado' : 'Desactivado'}
+          checked={theme === 'dark'}
+          onToggle={toggleTheme}
+        />
+      </div>
+
+      <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
         <SectionHeader title="Privacidad" />
         <ToggleRow
           icon="👁️"
@@ -311,7 +324,7 @@ export default function SettingsClient({ profile, email }: Props) {
         />
       </div>
 
-      <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+      <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
         <SectionHeader title="Notificaciones" />
         <ToggleRow
           icon="💼"
@@ -338,7 +351,7 @@ export default function SettingsClient({ profile, email }: Props) {
         />
       </div>
 
-      <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+      <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
         <SectionHeader title="Pagos" />
         {profile?.user_type === 'cliente' ? (
           <SettingRow icon="💳" label="Método de pago" value="Próximamente" href="/settings/payment" />
@@ -347,7 +360,7 @@ export default function SettingsClient({ profile, email }: Props) {
         )}
       </div>
 
-      <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+      <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
         <SectionHeader title="Ayuda" />
         <SettingRow icon="❓" label="Centro de ayuda" href="/settings/help" />
         <Divider />
@@ -356,12 +369,12 @@ export default function SettingsClient({ profile, email }: Props) {
         <SettingRow icon="🚩" label="Reportar problema" href="/settings/report" />
       </div>
 
-      <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+      <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
         <SettingRow icon="🚪" label="Cerrar sesión" danger onClick={handleSignOut} />
       </div>
 
       <div className="px-4 mt-6 text-center">
-        <p className="text-xs" style={{ color: '#9CA3AF' }}>MyJob v1.0.0</p>
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>MyJob v1.0.0</p>
       </div>
     </div>
   )

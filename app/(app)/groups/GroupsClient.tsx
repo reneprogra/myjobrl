@@ -63,16 +63,16 @@ export default function GroupsClient({ groups, myGroupIds, currentUserId, profil
   }
 
   const inputStyle = {
-    background: '#FFFFFF',
+    background: 'var(--card)',
     border: '1.5px solid #E5E2DB',
-    color: '#1A1A1A',
+    color: 'var(--fg)',
     fontFamily: 'var(--font-dm-sans)',
   }
 
   return (
     <div className="px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+        <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
           Grupos
         </h1>
         {profile?.user_type === 'worker' && (
@@ -91,8 +91,8 @@ export default function GroupsClient({ groups, myGroupIds, currentUserId, profil
 
       {/* Create form */}
       {showCreate && (
-        <form onSubmit={handleCreate} className="p-4 rounded-2xl mb-6 flex flex-col gap-4" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
-          <h3 className="font-semibold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+        <form onSubmit={handleCreate} className="p-4 rounded-2xl mb-6 flex flex-col gap-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+          <h3 className="font-semibold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
             Crear grupo
           </h3>
           <input
@@ -105,7 +105,7 @@ export default function GroupsClient({ groups, myGroupIds, currentUserId, profil
             style={inputStyle}
           />
           <div>
-            <label className="block text-xs font-medium mb-2" style={{ color: '#6B6860' }}>Categoría</label>
+            <label className="block text-xs font-medium mb-2" style={{ color: 'var(--muted)' }}>Categoría</label>
             <div className="flex flex-col gap-2">
               {categories.map(cat => (
                 <button
@@ -134,7 +134,7 @@ export default function GroupsClient({ groups, myGroupIds, currentUserId, profil
             style={inputStyle}
           />
           <div className="flex gap-3">
-            <button type="button" onClick={() => setShowCreate(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ background: '#F0EDE6' }}>
+            <button type="button" onClick={() => setShowCreate(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ background: 'var(--secondary-bg)' }}>
               Cancelar
             </button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: '#1A1A1A', color: '#FFFFFF', opacity: loading ? 0.6 : 1 }}>
@@ -148,10 +148,10 @@ export default function GroupsClient({ groups, myGroupIds, currentUserId, profil
       {groups.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="text-5xl mb-4">👥</div>
-          <p className="text-lg font-semibold" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+          <p className="text-lg font-semibold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
             Sin grupos aún
           </p>
-          <p className="text-sm mt-2" style={{ color: '#6B6860' }}>
+          <p className="text-sm mt-2" style={{ color: 'var(--muted)' }}>
             Crea un grupo con otros workers y recibe turnos en equipo
           </p>
         </div>
@@ -164,30 +164,30 @@ export default function GroupsClient({ groups, myGroupIds, currentUserId, profil
               <div
                 key={group.id}
                 className="p-4 rounded-2xl"
-                style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}
+                style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xl">{group.categories?.emoji}</span>
-                      <h3 className="font-semibold text-base" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+                      <h3 className="font-semibold text-base" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
                         {group.name}
                       </h3>
                       {isLeader && (
-                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#F0EDE6', color: '#6B6860' }}>
+                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--secondary-bg)', color: 'var(--muted)' }}>
                           Líder
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 text-sm" style={{ color: '#6B6860' }}>
+                    <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--muted)' }}>
                       <span>📍 {group.city}</span>
                       <span>👥 {group.member_count} miembros</span>
                     </div>
-                    <div className="text-xs mt-1" style={{ color: '#6B6860' }}>
+                    <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
                       {group.categories?.name}
                     </div>
                     {group.profiles && (
-                      <div className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
+                      <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                         Líder: {group.profiles.full_name}
                       </div>
                     )}

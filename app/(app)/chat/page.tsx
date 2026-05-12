@@ -29,7 +29,7 @@ function Avatar({ name, avatarUrl, size = 44 }: { name: string; avatarUrl: strin
   return (
     <div
       className="rounded-full flex items-center justify-center font-bold flex-shrink-0"
-      style={{ width: size, height: size, background: '#F0EDE6', color: '#1A1A1A', fontSize: size * 0.4 }}
+      style={{ width: size, height: size, background: 'var(--secondary-bg)', color: 'var(--fg)', fontSize: size * 0.4 }}
     >
       {name.charAt(0).toUpperCase()}
     </div>
@@ -92,19 +92,19 @@ export default async function ChatPage() {
       <div className="px-4 pt-6 pb-4">
         <h1
           className="text-2xl font-bold"
-          style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}
+          style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}
         >
           Mensajes
         </h1>
       </div>
 
       {convData.length === 0 ? (
-        <div className="mx-4 mt-8 p-8 rounded-2xl text-center" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+        <div className="mx-4 mt-8 p-8 rounded-2xl text-center" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
           <div className="text-4xl mb-3">💬</div>
-          <h3 className="font-semibold mb-1" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+          <h3 className="font-semibold mb-1" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
             Sin conversaciones
           </h3>
-          <p className="text-sm" style={{ color: '#6B6860' }}>
+          <p className="text-sm" style={{ color: 'var(--muted)' }}>
             Las conversaciones aparecen cuando se acepta una aplicación a un turno.
           </p>
         </div>
@@ -115,7 +115,7 @@ export default async function ChatPage() {
               key={conv.id}
               href={`/chat/${conv.id}`}
               className="flex items-center gap-3 px-4 py-3 active:opacity-70 transition-opacity"
-              style={{ borderBottom: '1px solid #F0EDE6' }}
+              style={{ borderBottom: '1px solid var(--border)' }}
             >
               <div className="relative">
                 <Avatar name={otherProfile.full_name} avatarUrl={otherProfile.avatar_url} />
@@ -133,18 +133,18 @@ export default async function ChatPage() {
                 <div className="flex items-baseline justify-between gap-2">
                   <span
                     className="font-semibold text-sm truncate"
-                    style={{ color: '#1A1A1A', fontFamily: 'var(--font-syne)' }}
+                    style={{ color: 'var(--fg)', fontFamily: 'var(--font-syne)' }}
                   >
                     {otherProfile.full_name}
                   </span>
                   {lastMessage && (
-                    <span className="text-xs flex-shrink-0" style={{ color: '#9CA3AF' }}>
+                    <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
                       {formatTime(lastMessage.created_at)}
                     </span>
                   )}
                 </div>
                 {(conv as any).shifts?.title && (
-                  <div className="text-xs mb-0.5 truncate" style={{ color: '#9CA3AF' }}>
+                  <div className="text-xs mb-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
                     Turno: {(conv as any).shifts.title}
                   </div>
                 )}
@@ -158,7 +158,7 @@ export default async function ChatPage() {
                       {lastMessage.content}
                     </p>
                   ) : (
-                    <p className="text-sm italic" style={{ color: '#9CA3AF' }}>Sin mensajes aún</p>
+                    <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>Sin mensajes aún</p>
                   )}
                 </div>
               </div>
