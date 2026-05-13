@@ -81,11 +81,27 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
   async function handleApplicationAction(appId: string, workerId: string, action: 'accepted' | 'rejected') {
     setLoading(true)
     const supabase = createClient()
-    await supabase.from('applications').update({ status: action }).eq('id', appId)
+
+    const { error: appError } = await supabase
+      .from('applications')
+      .update({ status: action })
+      .eq('id', appId)
+
+    if (appError) {
+      console.error('Error updating application:', appError)
+    }
 
     if (action === 'accepted') {
-      // Move shift to in_progress so it disappears from available list
-      await supabase.from('shifts').update({ status: 'in_progress' }).eq('id', shift.id)
+      // Move shift to in_progress so it disappears from available list for other workers
+      const { error: shiftError } = await supabase
+        .from('shifts')
+        .update({ status: 'in_progress' })
+        .eq('id', shift.id)
+        .eq('client_id', currentUserId)
+
+      if (shiftError) {
+        console.error('Error updating shift status:', shiftError)
+      }
     }
 
     setLoading(false)
@@ -357,7 +373,8 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
     <div className="flex flex-col gap-4">
 
       {/* En curso: worker info + prominent "Finalizado" button */}
-      {['in_progress', 'assigned'].includes(shift.status) && (
+      {/* Shown when a worker is accepted, regardless of shift.status (shift update may lag) */}
+      {acceptedApplication && shift.status !== 'completed' && !['cancelled', 'closed'].includes(shift.status) && (
         <div className="flex flex-col gap-3">
           <div className="p-4 rounded-2xl" style={{ background: '#FEF9C3', border: '1px solid #FDE68A' }}>
             <p className="text-sm font-semibold" style={{ color: '#854D0E' }}>🟡 Turno en curso</p>
