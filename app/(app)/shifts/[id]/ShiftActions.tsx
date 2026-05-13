@@ -112,7 +112,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
         await supabase.from('messages').insert({
           conversation_id: conv.id,
           sender_id: currentUserId,
-          content: '✅ El cliente confirmó que el trabajo fue completado. ¡Muchas gracias!',
+          content: '✅ El cliente ha confirmado que el trabajo fue completado. Espera el pago.',
         })
       }
     }
@@ -216,8 +216,25 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
       )
     }
 
-    // Worker's application was accepted → show "en curso" regardless of shift status
+    // Worker's application was accepted
     if (myApplication?.status === 'accepted') {
+      // Client confirmed work is done
+      if (shift.status === 'completed') {
+        return (
+          <div className="p-4 rounded-2xl flex flex-col gap-2" style={{ background: '#DCFCE7', border: '1px solid #BBF7D0' }}>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">✅</span>
+              <p className="text-sm font-semibold" style={{ color: '#166534' }}>
+                El cliente confirmó el trabajo
+              </p>
+            </div>
+            <p className="text-xs" style={{ color: '#166534' }}>
+              El pago será procesado en breve. ¡Buen trabajo!
+            </p>
+          </div>
+        )
+      }
+      // Shift in progress
       return (
         <div className="p-4 rounded-2xl flex flex-col gap-2" style={{ background: '#FEF9C3', border: '1px solid #FDE68A' }}>
           <div className="flex items-center gap-2">
@@ -339,22 +356,29 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
   return (
     <div className="flex flex-col gap-4">
 
-      {/* En curso: "Ya terminó" button */}
-      {['in_progress', 'assigned'].includes(shift.status) && !isClosed && (
-        <div className="p-4 rounded-2xl flex flex-col gap-3" style={{ background: '#FEF9C3', border: '1px solid #FDE68A' }}>
-          <p className="text-sm font-semibold" style={{ color: '#854D0E' }}>
-            🟡 Turno en curso
+      {/* En curso: worker info + prominent "Finalizado" button */}
+      {['in_progress', 'assigned'].includes(shift.status) && (
+        <div className="flex flex-col gap-3">
+          <div className="p-4 rounded-2xl" style={{ background: '#FEF9C3', border: '1px solid #FDE68A' }}>
+            <p className="text-sm font-semibold" style={{ color: '#854D0E' }}>🟡 Turno en curso</p>
             {acceptedApplication?.profiles?.full_name && (
-              <span className="font-normal"> — {acceptedApplication.profiles.full_name}</span>
+              <p className="text-xs mt-1" style={{ color: '#92400E' }}>
+                Worker: <span className="font-semibold">{acceptedApplication.profiles.full_name}</span>
+              </p>
             )}
-          </p>
+          </div>
           <button
             onClick={handleMarkCompleted}
             disabled={loading}
-            className="w-full py-3 rounded-xl text-sm font-semibold"
-            style={{ background: '#166534', color: '#FFFFFF', opacity: loading ? 0.6 : 1 }}
+            className="w-full py-4 rounded-2xl text-base font-bold tracking-wide"
+            style={{
+              background: '#16A34A',
+              color: '#FFFFFF',
+              opacity: loading ? 0.7 : 1,
+              boxShadow: '0 4px 14px rgba(22,163,74,0.35)',
+            }}
           >
-            {loading ? 'Actualizando...' : '✓ Ya terminó'}
+            {loading ? 'Procesando...' : '✓ Finalizado — el trabajo está completo'}
           </button>
         </div>
       )}
@@ -527,17 +551,16 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
         </div>
       )}
 
-      {/* Payment button — appears as soon as a worker is accepted */}
-      {acceptedApplication && !['cancelled', 'closed'].includes(shift.status) && (
+      {/* Payment button — only appears after client clicks Finalizado (completed) */}
+      {shift.status === 'completed' && acceptedApplication && (
         <div className="p-4 rounded-2xl flex flex-col gap-3" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
           <p className="text-sm font-medium" style={{ color: '#1E40AF' }}>
-            {shift.status === 'completed'
-              ? '✅ Trabajo confirmado. Realiza el pago al worker.'
-              : `Worker aceptado: ${acceptedApplication.profiles?.full_name || ''}. Realiza el pago al finalizar.`}
+            ✅ Trabajo confirmado. Realiza el pago a{' '}
+            <span className="font-semibold">{acceptedApplication.profiles?.full_name || 'el worker'}</span>.
           </p>
           <Link
             href={`/payments/${shift.id}`}
-            className="w-full py-3 rounded-xl text-sm font-semibold text-center block"
+            className="w-full py-4 rounded-2xl text-base font-bold text-center block"
             style={{ background: '#1877F2', color: '#FFFFFF' }}
           >
             Pagar turno — ${shift.pay_amount.toLocaleString('es-MX')} MXN
