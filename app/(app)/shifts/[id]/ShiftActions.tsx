@@ -216,8 +216,8 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
       )
     }
 
-    // Worker's application was accepted → shift is in_progress for them
-    if (['in_progress', 'assigned'].includes(shift.status) && myApplication?.status === 'accepted') {
+    // Worker's application was accepted → show "en curso" regardless of shift status
+    if (myApplication?.status === 'accepted') {
       return (
         <div className="p-4 rounded-2xl flex flex-col gap-2" style={{ background: '#FEF9C3', border: '1px solid #FDE68A' }}>
           <div className="flex items-center gap-2">
@@ -339,19 +339,15 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
   return (
     <div className="flex flex-col gap-4">
 
-      {/* En curso: show assigned worker + "Ya terminó" button */}
+      {/* En curso: "Ya terminó" button */}
       {['in_progress', 'assigned'].includes(shift.status) && !isClosed && (
         <div className="p-4 rounded-2xl flex flex-col gap-3" style={{ background: '#FEF9C3', border: '1px solid #FDE68A' }}>
-          <div>
-            <p className="text-sm font-semibold" style={{ color: '#854D0E' }}>
-              🟡 Turno en curso
-            </p>
+          <p className="text-sm font-semibold" style={{ color: '#854D0E' }}>
+            🟡 Turno en curso
             {acceptedApplication?.profiles?.full_name && (
-              <p className="text-xs mt-1" style={{ color: '#92400E' }}>
-                Worker asignado: <span className="font-semibold">{acceptedApplication.profiles.full_name}</span>
-              </p>
+              <span className="font-normal"> — {acceptedApplication.profiles.full_name}</span>
             )}
-          </div>
+          </p>
           <button
             onClick={handleMarkCompleted}
             disabled={loading}
@@ -360,22 +356,6 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
           >
             {loading ? 'Actualizando...' : '✓ Ya terminó'}
           </button>
-        </div>
-      )}
-
-      {/* Completed: show payment button */}
-      {shift.status === 'completed' && (
-        <div className="p-4 rounded-2xl flex flex-col gap-3" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
-          <p className="text-sm font-medium" style={{ color: '#1E40AF' }}>
-            ✅ Trabajo confirmado. Realiza el pago al worker.
-          </p>
-          <Link
-            href={`/payments/${shift.id}`}
-            className="w-full py-3 rounded-xl text-sm font-semibold text-center block"
-            style={{ background: '#1877F2', color: '#FFFFFF' }}
-          >
-            Pagar — ${shift.pay_amount.toLocaleString('es-MX')} MXN
-          </Link>
         </div>
       )}
 
@@ -544,6 +524,24 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
         <div className="p-6 rounded-2xl text-center" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
           <div className="text-3xl mb-2">👀</div>
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Aún no hay aplicantes</p>
+        </div>
+      )}
+
+      {/* Payment button — appears as soon as a worker is accepted */}
+      {acceptedApplication && !['cancelled', 'closed'].includes(shift.status) && (
+        <div className="p-4 rounded-2xl flex flex-col gap-3" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+          <p className="text-sm font-medium" style={{ color: '#1E40AF' }}>
+            {shift.status === 'completed'
+              ? '✅ Trabajo confirmado. Realiza el pago al worker.'
+              : `Worker aceptado: ${acceptedApplication.profiles?.full_name || ''}. Realiza el pago al finalizar.`}
+          </p>
+          <Link
+            href={`/payments/${shift.id}`}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-center block"
+            style={{ background: '#1877F2', color: '#FFFFFF' }}
+          >
+            Pagar turno — ${shift.pay_amount.toLocaleString('es-MX')} MXN
+          </Link>
         </div>
       )}
     </div>
