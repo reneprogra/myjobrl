@@ -1,8 +1,8 @@
 import BottomNav from '@/components/BottomNav'
+import DesktopSidebar from '@/components/layout/DesktopSidebar'
 import PageTransition from '@/components/PageTransition'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Image from 'next/image'
 
 export default async function AppLayout({
   children,
@@ -18,35 +18,25 @@ export default async function AppLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('user_type')
+    .select('user_type, full_name, avatar_url')
     .eq('id', user.id)
     .single()
 
   const userType = profile?.user_type || 'worker'
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
-      <header
-        className="sticky top-0 z-10 flex items-center gap-2 px-4 h-14 max-w-lg mx-auto"
-        style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}
-      >
-        <Image
-          src="/logo.png"
-          alt="MyJob"
-          height={32}
-          width={96}
-          style={{ height: '32px', width: 'auto' }}
-        />
-        <span
-          className="text-lg font-bold"
-          style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}
-        >
-          MyJob
-        </span>
-      </header>
-      <main className="pb-24 max-w-lg mx-auto">
-        <PageTransition>{children}</PageTransition>
+    <div className="min-h-screen flex" style={{ background: 'var(--bg)' }}>
+      {/* Desktop sidebar — hidden on mobile */}
+      <DesktopSidebar userType={userType} profile={profile} />
+
+      {/* Main content */}
+      <main className="flex-1 pb-24 lg:pb-0 min-w-0">
+        <div className="max-w-2xl mx-auto lg:max-w-5xl lg:px-8">
+          <PageTransition>{children}</PageTransition>
+        </div>
       </main>
+
+      {/* Bottom nav — hidden on desktop */}
       <BottomNav userType={userType} />
     </div>
   )

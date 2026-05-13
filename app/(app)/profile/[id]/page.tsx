@@ -73,6 +73,25 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     .eq('worker_id', id)
     .eq('status', 'accepted')
 
+  // Sanción temporal: >2 turnos cerrados (assigned + pasado su horario) en los últimos 30 días
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+  const { data: acceptedAppsForSanction } = await supabase
+    .from('applications')
+    .select('shifts(shift_date, shift_start, status, created_at)')
+    .eq('worker_id', id)
+    .eq('status', 'accepted')
+    .gte('created_at', thirtyDaysAgo.toISOString())
+
+  const closedShiftsCount = acceptedAppsForSanction?.filter((app: any) => {
+    if (!app.shifts) return false
+    if (app.shifts.status !== 'assigned') return false
+    return new Date() > new Date(`${app.shifts.shift_date}T${app.shifts.shift_start}`)
+  }).length ?? 0
+
+  const hasSanction = closedShiftsCount > 2
+
   return (
     <div className="pb-8">
       {/* Dark header */}
@@ -134,6 +153,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             </div>
             {profile.has_warning && (
               <span className="text-xs" style={{ color: '#F59E0B' }}>⚠️ Advertencia por cancelaciones</span>
+            )}
+            {hasSanction && (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full mt-1"
+                style={{ background: '#FEE2E2', color: '#991B1B' }}>
+                🚫 Sanción temporal
+              </span>
             )}
             {profile.city && (
               <p className="text-sm mt-1 opacity-70">📍 {profile.city}{profile.state ? `, ${profile.state}` : ''}</p>

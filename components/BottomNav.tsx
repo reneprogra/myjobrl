@@ -165,7 +165,7 @@ export default function BottomNav({ userType }: { userType: string }) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t lg:hidden"
       style={{ background: 'var(--nav-bg)', borderColor: 'var(--nav-border)' }}
     >
       <div className="flex items-center justify-around px-2 py-2 max-w-lg mx-auto"
