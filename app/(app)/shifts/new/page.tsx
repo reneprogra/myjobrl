@@ -124,6 +124,9 @@ export default function NewShiftPage() {
       status: 'open',
       latitude: coords?.lat ?? null,
       longitude: coords?.lon ?? null,
+      expires_at: form.shift_date
+        ? new Date(`${form.shift_date}T${form.shift_start || '23:59'}:00`).toISOString()
+        : null,
     }).select().single()
 
     if (error) {
@@ -135,9 +138,9 @@ export default function NewShiftPage() {
   }
 
   const inputStyle = {
-    background: '#FFFFFF',
-    border: '1.5px solid #E5E2DB',
-    color: '#1A1A1A',
+    background: 'var(--info-card-bg)',
+    border: '1.5px solid var(--info-card-border)',
+    color: 'var(--info-card-fg)',
     fontFamily: 'var(--font-dm-sans)',
   }
 
@@ -145,7 +148,7 @@ export default function NewShiftPage() {
     <div className="px-4 py-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => router.back()} className="p-2 rounded-xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+        <button onClick={() => router.back()} className="p-2 rounded-xl" style={{ background: 'var(--info-card-bg)', border: '1px solid var(--info-card-border)' }}>
           <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
@@ -158,7 +161,7 @@ export default function NewShiftPage() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {/* Category */}
         <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: '#1A1A1A' }}>
+          <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--fg)' }}>
             Categoría *
           </label>
           <div className="grid grid-cols-1 gap-2">
@@ -169,9 +172,9 @@ export default function NewShiftPage() {
                 onClick={() => set('category_id', cat.id)}
                 className="flex items-center gap-3 px-4 py-3 rounded-xl text-left"
                 style={{
-                  background: form.category_id === cat.id ? '#1A1A1A' : '#FFFFFF',
-                  border: `1.5px solid ${form.category_id === cat.id ? '#1A1A1A' : '#E5E2DB'}`,
-                  color: form.category_id === cat.id ? '#FFFFFF' : '#1A1A1A',
+                  background: form.category_id === cat.id ? 'var(--btn-bg)' : 'var(--info-card-bg)',
+                  border: `1.5px solid ${form.category_id === cat.id ? 'var(--btn-bg)' : 'var(--info-card-border)'}`,
+                  color: form.category_id === cat.id ? 'var(--btn-fg)' : 'var(--info-card-fg)',
                 }}
               >
                 <span className="text-xl">{cat.emoji}</span>
@@ -183,7 +186,7 @@ export default function NewShiftPage() {
 
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: '#1A1A1A' }}>
+          <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--fg)' }}>
             Título del turno *
           </label>
           <input
@@ -199,7 +202,7 @@ export default function NewShiftPage() {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: '#1A1A1A' }}>
+          <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--fg)' }}>
             Descripción
           </label>
           <textarea
@@ -215,7 +218,7 @@ export default function NewShiftPage() {
         {/* Address + geolocation */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-sm font-medium" style={{ color: '#1A1A1A' }}>
+            <label className="block text-sm font-medium" style={{ color: 'var(--fg)' }}>
               Dirección *
             </label>
             <button
@@ -241,7 +244,7 @@ export default function NewShiftPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#1A1A1A' }}>Ciudad *</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--fg)' }}>Ciudad *</label>
             <input
               type="text"
               value={form.city}
@@ -253,7 +256,7 @@ export default function NewShiftPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#1A1A1A' }}>Estado</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--fg)' }}>Estado</label>
             <input
               type="text"
               value={form.state}
@@ -292,7 +295,7 @@ export default function NewShiftPage() {
 
         {/* Date & Time */}
         <div>
-          <label className="block text-sm font-medium mb-1.5" style={{ color: '#1A1A1A' }}>
+          <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--fg)' }}>
             Fecha *
           </label>
           <input
@@ -307,7 +310,7 @@ export default function NewShiftPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#1A1A1A' }}>Hora inicio *</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--fg)' }}>Hora inicio *</label>
             <input
               type="time"
               value={form.shift_start}
@@ -318,7 +321,7 @@ export default function NewShiftPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#1A1A1A' }}>Hora fin *</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--fg)' }}>Hora fin *</label>
             <input
               type="time"
               value={form.shift_end}
@@ -333,7 +336,7 @@ export default function NewShiftPage() {
         {/* Pay & Slots */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#1A1A1A' }}>Pago (MXN) *</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--fg)' }}>Pago (MXN) *</label>
             <input
               type="number"
               value={form.pay_amount}
@@ -346,7 +349,7 @@ export default function NewShiftPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: '#1A1A1A' }}>Cupos *</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--fg)' }}>Cupos *</label>
             <input
               type="number"
               value={form.slots}
@@ -372,8 +375,8 @@ export default function NewShiftPage() {
           disabled={loading}
           className="w-full py-3.5 rounded-xl text-sm font-semibold mt-2"
           style={{
-            background: '#1A1A1A',
-            color: '#FFFFFF',
+            background: 'var(--btn-bg)',
+            color: 'var(--btn-fg)',
             opacity: loading ? 0.6 : 1,
             fontFamily: 'var(--font-dm-sans)',
           }}

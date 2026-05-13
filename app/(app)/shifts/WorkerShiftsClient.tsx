@@ -4,7 +4,15 @@ import { useState, useEffect } from 'react'
 import ShiftCard from '@/components/ShiftCard'
 import { haversineKm } from '@/lib/haversine'
 
-const MAX_KM = 10
+const MAX_KM = 50
+
+function filterByCity(shifts: any[], workerCity: string): any[] {
+  if (!workerCity) return shifts
+  const cityLower = workerCity.toLowerCase()
+  const filtered = shifts.filter(s => s.city?.toLowerCase().includes(cityLower))
+  // If city filter finds nothing, return all shifts so list is never empty
+  return filtered.length > 0 ? filtered : shifts
+}
 
 export default function WorkerShiftsClient({ shifts, workerCity }: { shifts: any[]; workerCity: string }) {
   const [gpsStatus, setGpsStatus] = useState<'loading' | 'denied' | 'ready'>('loading')
@@ -12,6 +20,7 @@ export default function WorkerShiftsClient({ shifts, workerCity }: { shifts: any
 
   useEffect(() => {
     if (!navigator.geolocation) {
+      setNearbyShifts(filterByCity(shifts, workerCity))
       setGpsStatus('denied')
       return
     }
@@ -33,21 +42,16 @@ export default function WorkerShiftsClient({ shifts, workerCity }: { shifts: any
             return a._distKm - b._distKm
           })
 
-        if (gpsFiltered.length > 0) {
-          setNearbyShifts(gpsFiltered)
-        } else if (workerCity) {
-          // Fall back to city name matching (ILIKE equivalent)
-          const cityLower = workerCity.toLowerCase()
-          const cityFallback = shifts.filter(s =>
-            s.city && s.city.toLowerCase().includes(cityLower)
-          )
-          setNearbyShifts(cityFallback)
-        } else {
-          setNearbyShifts([])
-        }
+        // If GPS filter returns results use them; otherwise fall back to city
+        const result = gpsFiltered.length > 0 ? gpsFiltered : filterByCity(shifts, workerCity)
+        setNearbyShifts(result)
         setGpsStatus('ready')
       },
-      () => setGpsStatus('denied'),
+      () => {
+        // GPS denied — fall back to city matching
+        setNearbyShifts(filterByCity(shifts, workerCity))
+        setGpsStatus('denied')
+      },
       { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 }
     )
   }, []) // shifts is stable (rendered from server)
@@ -66,23 +70,6 @@ export default function WorkerShiftsClient({ shifts, workerCity }: { shifts: any
     )
   }
 
-  if (gpsStatus === 'denied') {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="text-5xl mb-4">📍</div>
-        <p
-          className="text-lg font-semibold"
-          style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}
-        >
-          Activa tu ubicación para ver turnos cercanos
-        </p>
-        <p className="text-sm mt-2" style={{ color: 'var(--muted)' }}>
-          Necesitamos tu ubicación para mostrarte turnos dentro de {MAX_KM} km
-        </p>
-      </div>
-    )
-  }
-
   if (nearbyShifts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -91,10 +78,10 @@ export default function WorkerShiftsClient({ shifts, workerCity }: { shifts: any
           className="text-lg font-semibold"
           style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}
         >
-          Sin turnos cercanos
+          Sin turnos disponibles
         </p>
         <p className="text-sm mt-2" style={{ color: 'var(--muted)' }}>
-          No hay turnos disponibles en un radio de {MAX_KM} km de tu ubicación
+          No hay turnos publicados en tu zona por ahora
         </p>
       </div>
     )
@@ -102,6 +89,11 @@ export default function WorkerShiftsClient({ shifts, workerCity }: { shifts: any
 
   return (
     <div className="flex flex-col gap-3">
+      {gpsStatus === 'denied' && workerCity && (
+        <p className="text-xs mb-1" style={{ color: 'var(--muted)' }}>
+          📍 Mostrando turnos en {workerCity}
+        </p>
+      )}
       {nearbyShifts.map((shift: any) => (
         <ShiftCard
           key={shift.id}

@@ -12,10 +12,8 @@
   --color-muted: #6B6860;
   --color-muted-bg: #F0EDE6;
 
-  /* Font families — use font-syne, font-dm-sans, font-instrument-serif as Tailwind classes */
-  --font-family-syne: var(--font-syne), sans-serif;
-  --font-family-dm-sans: var(--font-dm-sans), sans-serif;
-  --font-family-instrument-serif: var(--font-instrument-serif), serif;
+  /* Plus Jakarta Sans como fuente universal */
+  --font-family-sans: var(--font-plus-jakarta-sans), system-ui, sans-serif;
 }
 
 /* ─── Semantic color tokens (dark-mode aware) ─── */
@@ -31,6 +29,14 @@
   --nav-border:   #E5E2DB;
   --input-bg:     #FFFFFF;
   --section-bg:   #FFFFFF;
+  /* Primary button — inverts in dark mode */
+  --btn-bg:       #1A1A1A;
+  --btn-fg:       #FFFFFF;
+  /* Info card backgrounds (hardcoded white in light) */
+  --info-card-bg:     #FFFFFF;
+  --info-card-border: #E5E2DB;
+  --info-card-fg:     #1A1A1A;
+  --info-card-muted:  #6B6860;
 }
 
 .dark {
@@ -45,16 +51,27 @@
   --nav-border:   #222222;
   --input-bg:     #1C1C1C;
   --section-bg:   #141414;
+  /* Primary button inverted */
+  --btn-bg:       #F0EDE6;
+  --btn-fg:       #1A1A1A;
+  /* Info card in dark mode */
+  --info-card-bg:     #1C1C1C;
+  --info-card-border: #2A2A2A;
+  --info-card-fg:     #FFFFFF;
+  --info-card-muted:  #A0A0A0;
 }
 
 body {
   background: var(--bg);
   color: var(--fg);
-  font-family: var(--font-dm-sans), sans-serif;
+  font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-syne), sans-serif;
+/* Remap legacy font variables — all point to Plus Jakarta Sans */
+:root {
+  --font-syne: var(--font-plus-jakarta-sans);
+  --font-dm-sans: var(--font-plus-jakarta-sans);
+  --font-instrument-serif: var(--font-plus-jakarta-sans);
 }
 
 /* Scrollbar */

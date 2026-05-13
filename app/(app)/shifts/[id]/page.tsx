@@ -50,15 +50,23 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
         .single().then(r => ({ data: r.data ? [r.data] : [] }))
 
   const myApplication = !isClient ? (applications as any[])?.[0] : null
+  const acceptedApplication = isClient
+    ? (applications as any[])?.find((a: any) => a.status === 'accepted') ?? null
+    : null
+
+  const isClosed = ['assigned', 'in_progress'].includes(shift.status) &&
+    new Date() > new Date(`${shift.shift_date}T${shift.shift_start}`)
 
   const statusColors: Record<string, { bg: string; text: string; label: string }> = {
     open: { bg: '#DCFCE7', text: '#166534', label: 'Abierto' },
     assigned: { bg: '#DBEAFE', text: '#1E40AF', label: 'Asignado' },
+    in_progress: { bg: '#FEF9C3', text: '#854D0E', label: 'En curso' },
     completed: { bg: '#F3F4F6', text: '#374151', label: 'Completado' },
     cancelled: { bg: '#FEE2E2', text: '#991B1B', label: 'Cancelado' },
+    closed: { bg: '#FEE2E2', text: '#991B1B', label: 'Turno cerrado' },
   }
 
-  const sc = statusColors[shift.status] || statusColors.open
+  const sc = isClosed ? statusColors.closed : (statusColors[shift.status] || statusColors.open)
 
   return (
     <div className="pb-8">
@@ -117,39 +125,39 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
         </div>
 
         {/* Address */}
-        <div className="p-4 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+        <div className="p-4 rounded-2xl" style={{ background: 'var(--info-card-bg)', border: '1px solid var(--info-card-border)' }}>
           <div className="flex items-center gap-2 mb-1">
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
             </svg>
-            <span className="text-sm font-medium" style={{ color: '#1A1A1A' }}>Dirección</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--info-card-fg)' }}>Dirección</span>
           </div>
-          <p className="text-sm" style={{ color: '#6B6860' }}>{shift.location_address}</p>
+          <p className="text-sm" style={{ color: 'var(--info-card-muted)' }}>{shift.location_address}</p>
         </div>
 
         {/* Description */}
         {shift.description && (
-          <div className="p-4 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
-            <h3 className="text-sm font-semibold mb-2" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+          <div className="p-4 rounded-2xl" style={{ background: 'var(--info-card-bg)', border: '1px solid var(--info-card-border)' }}>
+            <h3 className="text-sm font-semibold mb-2" style={{ fontFamily: 'var(--font-syne)', color: 'var(--info-card-fg)' }}>
               Descripción
             </h3>
-            <p className="text-sm leading-relaxed" style={{ color: '#6B6860' }}>{shift.description}</p>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--info-card-muted)' }}>{shift.description}</p>
           </div>
         )}
 
         {/* Client info (for workers) */}
         {!isClient && shift.profiles && (
-          <div className="p-4 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
-            <h3 className="text-sm font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
+          <div className="p-4 rounded-2xl" style={{ background: 'var(--info-card-bg)', border: '1px solid var(--info-card-border)' }}>
+            <h3 className="text-sm font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: 'var(--info-card-fg)' }}>
               Cliente
             </h3>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
-                style={{ background: '#F0EDE6', color: '#1A1A1A' }}>
+                style={{ background: 'var(--secondary-bg)', color: 'var(--fg)' }}>
                 {shift.profiles.full_name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <div className="font-medium text-sm" style={{ color: '#1A1A1A' }}>
+                <div className="font-medium text-sm" style={{ color: 'var(--info-card-fg)' }}>
                   {shift.profiles.full_name}
                   {shift.profiles.is_verified && (
                     <span className="ml-1.5 text-xs font-medium" style={{ color: '#1877F2' }}>✓ Verificado</span>
@@ -163,6 +171,18 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
           </div>
         )}
 
+        {/* Turno cerrado banner */}
+        {isClosed && (
+          <div className="px-4 py-3 rounded-2xl flex items-center gap-3" style={{ background: '#FEE2E2', border: '1px solid #FECACA' }}>
+            <svg width="18" height="18" fill="none" stroke="#991B1B" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p className="text-sm font-medium" style={{ color: '#991B1B' }}>
+              Este turno ha cerrado. El tiempo de servicio ya pasó.
+            </p>
+          </div>
+        )}
+
         {/* Actions */}
         <ShiftActions
           shift={shift}
@@ -170,6 +190,8 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
           currentUserId={user.id}
           myApplication={myApplication}
           applications={isClient ? applications as any[] : []}
+          acceptedApplication={acceptedApplication}
+          isClosed={isClosed}
         />
       </div>
     </div>
@@ -178,10 +200,10 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
 
 function InfoCard({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
-    <div className="p-3 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E5E2DB' }}>
+    <div className="p-3 rounded-2xl" style={{ background: 'var(--info-card-bg)', border: '1px solid var(--info-card-border)' }}>
       <div className="text-base mb-0.5">{icon}</div>
-      <div className="text-xs" style={{ color: '#6B6860' }}>{label}</div>
-      <div className="text-sm font-medium mt-0.5" style={{ color: '#1A1A1A' }}>{value}</div>
+      <div className="text-xs" style={{ color: 'var(--info-card-muted)' }}>{label}</div>
+      <div className="text-sm font-medium mt-0.5" style={{ color: 'var(--info-card-fg)' }}>{value}</div>
     </div>
   )
 }

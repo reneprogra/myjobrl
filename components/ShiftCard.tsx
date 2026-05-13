@@ -15,12 +15,23 @@ interface ShiftCardProps {
 const statusColors: Record<string, { bg: string; text: string; label: string }> = {
   open: { bg: '#DCFCE7', text: '#166534', label: 'Abierto' },
   assigned: { bg: '#DBEAFE', text: '#1E40AF', label: 'Asignado' },
+  in_progress: { bg: '#FEF9C3', text: '#854D0E', label: 'En curso' },
   completed: { bg: '#F3F4F6', text: '#374151', label: 'Completado' },
   cancelled: { bg: '#FEE2E2', text: '#991B1B', label: 'Cancelado' },
+  closed: { bg: '#FEE2E2', text: '#991B1B', label: 'Turno cerrado' },
   expired: { bg: '#F3F4F6', text: '#6B7280', label: 'Vencido' },
   pending: { bg: '#FEF9C3', text: '#854D0E', label: 'Pendiente' },
   accepted: { bg: '#DCFCE7', text: '#166534', label: 'Aceptado' },
   rejected: { bg: '#FEE2E2', text: '#991B1B', label: 'Rechazado' },
+}
+
+function computeStatusKey(shift: Shift, applicationStatus?: string): string {
+  if (applicationStatus) return applicationStatus
+  if (shift.status === 'assigned') {
+    const shiftDateTime = new Date(`${shift.shift_date}T${shift.shift_start}`)
+    if (new Date() > shiftDateTime) return 'closed'
+  }
+  return shift.status
 }
 
 function formatDate(dateStr: string) {
@@ -41,7 +52,7 @@ function formatDistance(km: number): string {
 }
 
 export default function ShiftCard({ shift, showClientRating, applicationStatus, distanceKm }: ShiftCardProps) {
-  const statusKey = applicationStatus || shift.status
+  const statusKey = computeStatusKey(shift, applicationStatus)
   const statusInfo = statusColors[statusKey] || statusColors.open
 
   return (

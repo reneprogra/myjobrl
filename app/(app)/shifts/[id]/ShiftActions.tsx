@@ -12,6 +12,8 @@ interface Props {
   currentUserId: string
   myApplication: any | null
   applications: any[]
+  acceptedApplication: any | null
+  isClosed?: boolean
 }
 
 function CountdownTimer({ createdAt }: { createdAt: string }) {
@@ -51,7 +53,7 @@ function CountdownTimer({ createdAt }: { createdAt: string }) {
   )
 }
 
-export default function ShiftActions({ shift, isClient, currentUserId, myApplication, applications }: Props) {
+export default function ShiftActions({ shift, isClient, currentUserId, myApplication, applications, acceptedApplication, isClosed }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [showApplyForm, setShowApplyForm] = useState(false)
@@ -82,8 +84,8 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
     await supabase.from('applications').update({ status: action }).eq('id', appId)
 
     if (action === 'accepted') {
-      // Update shift status to assigned
-      await supabase.from('shifts').update({ status: 'assigned' }).eq('id', shift.id)
+      // Move shift to in_progress so it disappears from available list
+      await supabase.from('shifts').update({ status: 'in_progress' }).eq('id', shift.id)
     }
 
     setLoading(false)
@@ -94,6 +96,27 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
     setLoading(true)
     const supabase = createClient()
     await supabase.from('shifts').update({ status: 'completed' }).eq('id', shift.id)
+
+    // Notify the accepted worker via chat if a conversation exists
+    const workerId = acceptedApplication?.worker_id
+    if (workerId) {
+      const { data: conv } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('shift_id', shift.id)
+        .eq('client_id', currentUserId)
+        .eq('worker_id', workerId)
+        .maybeSingle()
+
+      if (conv) {
+        await supabase.from('messages').insert({
+          conversation_id: conv.id,
+          sender_id: currentUserId,
+          content: '✅ El cliente confirmó que el trabajo fue completado. ¡Muchas gracias!',
+        })
+      }
+    }
+
     setLoading(false)
     router.refresh()
   }
@@ -104,9 +127,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
     const supabase = createClient()
     await supabase.from('shifts').update({ status: 'cancelled' }).eq('id', shift.id)
 
-    // If worker cancels (only shifts assigned to them)
     if (!isClient) {
-      // Increment cancellation count
       const { data: profile } = await supabase.from('profiles').select('cancellation_count, rating').eq('id', currentUserId).single()
       if (profile) {
         const newCount = (profile.cancellation_count || 0) + 1
@@ -127,7 +148,6 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
     setLoading(true)
     const supabase = createClient()
 
-    // Insert review
     await supabase.from('reviews').insert({
       shift_id: shift.id,
       reviewer_id: currentUserId,
@@ -136,7 +156,6 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
       comment: reviewComment || null,
     })
 
-    // Update worker average rating
     const { data: reviews } = await supabase
       .from('reviews')
       .select('rating')
@@ -159,7 +178,6 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
     setLoading(true)
     const supabase = createClient()
 
-    // Find existing conversation for this shift + pair
     const { data: existing } = await supabase
       .from('conversations')
       .select('id')
@@ -173,7 +191,6 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
       return
     }
 
-    // Create new conversation
     const { data: created } = await supabase
       .from('conversations')
       .insert({ shift_id: shift.id, client_id: currentUserId, worker_id: workerId })
@@ -184,9 +201,10 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
     if (created) router.push(`/chat/${created.id}`)
   }
 
-  // Worker view
+  // ─── Worker view ────────────────────────────────────────────────
   if (!isClient) {
-    if (shift.status !== 'open') {
+    // Shift is no longer open and this worker didn't get it
+    if (!['open', 'in_progress', 'assigned'].includes(shift.status)) {
       return (
         <div className="p-4 rounded-2xl text-center" style={{ background: 'var(--secondary-bg)' }}>
           <p className="text-sm" style={{ color: 'var(--muted)' }}>
@@ -198,6 +216,29 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
       )
     }
 
+    // Worker's application was accepted → shift is in_progress for them
+    if (['in_progress', 'assigned'].includes(shift.status) && myApplication?.status === 'accepted') {
+      return (
+        <div className="p-4 rounded-2xl flex flex-col gap-2" style={{ background: '#FEF9C3', border: '1px solid #FDE68A' }}>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🟡</span>
+            <p className="text-sm font-semibold" style={{ color: '#854D0E' }}>
+              Turno en curso
+            </p>
+          </div>
+          <p className="text-xs" style={{ color: '#92400E' }}>
+            El cliente te ha asignado este turno. Preséntate puntualmente.
+          </p>
+          {myApplication.proposed_pay && (
+            <p className="text-xs mt-1" style={{ color: '#92400E' }}>
+              Pago acordado: ${myApplication.proposed_pay.toLocaleString('es-MX')} MXN
+            </p>
+          )}
+        </div>
+      )
+    }
+
+    // Worker applied — show status
     if (myApplication) {
       const appStatusLabels: Record<string, string> = {
         pending: '⏳ Aplicación enviada — esperando respuesta',
@@ -226,6 +267,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
       )
     }
 
+    // Apply form
     if (showApplyForm) {
       return (
         <div className="p-4 rounded-2xl flex flex-col gap-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
@@ -242,7 +284,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
               rows={3}
               placeholder="Cuéntale al cliente sobre tu experiencia..."
               className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
-              style={{ background: 'var(--bg)', border: '1.5px solid #E5E2DB', color: 'var(--fg)', fontFamily: 'var(--font-dm-sans)' }}
+              style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', color: 'var(--fg)', fontFamily: 'var(--font-dm-sans)' }}
             />
           </div>
           <div>
@@ -255,7 +297,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
               onChange={e => setProposedPay(e.target.value)}
               placeholder={`Pago ofrecido: $${shift.pay_amount}`}
               className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-              style={{ background: 'var(--bg)', border: '1.5px solid #E5E2DB', color: 'var(--fg)', fontFamily: 'var(--font-dm-sans)' }}
+              style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', color: 'var(--fg)', fontFamily: 'var(--font-dm-sans)' }}
             />
           </div>
           <div className="flex gap-3">
@@ -270,7 +312,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
               onClick={handleApply}
               disabled={loading}
               className="flex-1 py-3 rounded-xl text-sm font-semibold"
-              style={{ background: '#1A1A1A', color: '#FFFFFF', opacity: loading ? 0.6 : 1 }}
+              style={{ background: 'var(--btn-bg)', color: 'var(--btn-fg)', opacity: loading ? 0.6 : 1 }}
             >
               {loading ? 'Enviando...' : 'Enviar aplicación'}
             </button>
@@ -285,7 +327,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
         <button
           onClick={() => setShowApplyForm(true)}
           className="w-full py-3.5 rounded-xl text-sm font-semibold"
-          style={{ background: '#1A1A1A', color: '#FFFFFF' }}
+          style={{ background: 'var(--btn-bg)', color: 'var(--btn-fg)' }}
         >
           Aplicar al turno →
         </button>
@@ -293,22 +335,52 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
     )
   }
 
-  // Client view
+  // ─── Client view ────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-4">
-      {/* Action buttons */}
-      {shift.status === 'assigned' && (
-        <button
-          onClick={handleMarkCompleted}
-          disabled={loading}
-          className="w-full py-3.5 rounded-xl text-sm font-semibold"
-          style={{ background: '#166534', color: '#FFFFFF', opacity: loading ? 0.6 : 1 }}
-        >
-          {loading ? 'Actualizando...' : '✓ Marcar como completado'}
-        </button>
+
+      {/* En curso: show assigned worker + "Ya terminó" button */}
+      {['in_progress', 'assigned'].includes(shift.status) && !isClosed && (
+        <div className="p-4 rounded-2xl flex flex-col gap-3" style={{ background: '#FEF9C3', border: '1px solid #FDE68A' }}>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: '#854D0E' }}>
+              🟡 Turno en curso
+            </p>
+            {acceptedApplication?.profiles?.full_name && (
+              <p className="text-xs mt-1" style={{ color: '#92400E' }}>
+                Worker asignado: <span className="font-semibold">{acceptedApplication.profiles.full_name}</span>
+              </p>
+            )}
+          </div>
+          <button
+            onClick={handleMarkCompleted}
+            disabled={loading}
+            className="w-full py-3 rounded-xl text-sm font-semibold"
+            style={{ background: '#166534', color: '#FFFFFF', opacity: loading ? 0.6 : 1 }}
+          >
+            {loading ? 'Actualizando...' : '✓ Ya terminó'}
+          </button>
+        </div>
       )}
 
-      {['open', 'assigned'].includes(shift.status) && (
+      {/* Completed: show payment button */}
+      {shift.status === 'completed' && (
+        <div className="p-4 rounded-2xl flex flex-col gap-3" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+          <p className="text-sm font-medium" style={{ color: '#1E40AF' }}>
+            ✅ Trabajo confirmado. Realiza el pago al worker.
+          </p>
+          <Link
+            href={`/payments/${shift.id}`}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-center block"
+            style={{ background: '#1877F2', color: '#FFFFFF' }}
+          >
+            Pagar — ${shift.pay_amount.toLocaleString('es-MX')} MXN
+          </Link>
+        </div>
+      )}
+
+      {/* Cancel button */}
+      {['open', 'in_progress', 'assigned'].includes(shift.status) && (
         <button
           onClick={handleCancel}
           disabled={loading}
@@ -319,7 +391,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
         </button>
       )}
 
-      {/* Applicants */}
+      {/* Applicants list */}
       {applications && applications.length > 0 && (
         <div>
           <h3 className="text-base font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
@@ -366,7 +438,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
                   <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--muted)' }}>{app.message}</p>
                 )}
 
-                {app.status === 'pending' && shift.status !== 'cancelled' && (
+                {app.status === 'pending' && shift.status === 'open' && (
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleApplicationAction(app.id, app.worker_id, 'rejected')}
@@ -380,7 +452,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
                       onClick={() => handleApplicationAction(app.id, app.worker_id, 'accepted')}
                       disabled={loading}
                       className="flex-1 py-2 rounded-xl text-xs font-semibold"
-                      style={{ background: '#1A1A1A', color: '#FFFFFF' }}
+                      style={{ background: 'var(--btn-bg)', color: 'var(--btn-fg)' }}
                     >
                       Aceptar
                     </button>
@@ -396,7 +468,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
                       onClick={() => handleOpenChat(app.worker_id)}
                       disabled={loading}
                       className="text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1"
-                      style={{ background: '#1A1A1A', color: '#FFFFFF', opacity: loading ? 0.6 : 1 }}
+                      style={{ background: 'var(--btn-bg)', color: 'var(--btn-fg)', opacity: loading ? 0.6 : 1 }}
                     >
                       <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
@@ -423,7 +495,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
 
                 {/* Review form */}
                 {showReviewForm === app.worker_id && (
-                  <div className="mt-3 flex flex-col gap-3 pt-3" style={{ borderTop: '1px solid #E5E2DB' }}>
+                  <div className="mt-3 flex flex-col gap-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
                     <div>
                       <label className="block text-xs font-medium mb-2" style={{ color: 'var(--fg)' }}>Calificación</label>
                       <div className="flex gap-2">
@@ -448,14 +520,14 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
                       style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--fg)' }}
                     />
                     <div className="flex gap-2">
-                      <button onClick={() => setShowReviewForm(null)} className="flex-1 py-2 rounded-xl text-xs" style={{ background: 'var(--secondary-bg)' }}>
+                      <button onClick={() => setShowReviewForm(null)} className="flex-1 py-2 rounded-xl text-xs" style={{ background: 'var(--secondary-bg)', color: 'var(--fg)' }}>
                         Cancelar
                       </button>
                       <button
                         onClick={() => handleSubmitReview(app.worker_id)}
                         disabled={loading}
                         className="flex-1 py-2 rounded-xl text-xs font-semibold"
-                        style={{ background: '#1A1A1A', color: '#FFFFFF' }}
+                        style={{ background: 'var(--btn-bg)', color: 'var(--btn-fg)' }}
                       >
                         Publicar reseña
                       </button>
@@ -468,7 +540,7 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
         </div>
       )}
 
-      {applications?.length === 0 && (
+      {applications?.length === 0 && shift.status === 'open' && (
         <div className="p-6 rounded-2xl text-center" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
           <div className="text-3xl mb-2">👀</div>
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Aún no hay aplicantes</p>

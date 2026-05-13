@@ -109,7 +109,7 @@ async function ClientDashboard({ userId, profile }: { userId: string; profile: a
       <Link href="/shifts/new">
         <div
           className="flex items-center justify-between p-4 rounded-2xl mb-6 transition-all active:scale-[0.99]"
-          style={{ background: '#1A1A1A', color: '#FFFFFF' }}
+          style={{ background: 'var(--btn-bg)', color: 'var(--btn-fg)' }}
         >
           <div>
             <div className="font-semibold" style={{ fontFamily: 'var(--font-syne)' }}>
@@ -217,7 +217,7 @@ async function ClientDashboard({ userId, profile }: { userId: string; profile: a
                   </div>
                   <button
                     className="px-3 py-2 rounded-xl text-xs font-semibold flex-shrink-0"
-                    style={{ background: '#1A1A1A', color: '#FFFFFF' }}
+                    style={{ background: 'var(--btn-bg)', color: 'var(--btn-fg)' }}
                   >
                     Contratar grupo
                   </button>
@@ -249,11 +249,12 @@ async function WorkerDashboard({ userId, profile }: { userId: string; profile: a
 
   const categoryIds = workerCats?.map(wc => wc.category_id) || []
 
+  const nowIso = new Date().toISOString()
   let shiftsQuery = supabase
     .from('shifts')
     .select('*, categories(*), profiles(*)')
     .eq('status', 'open')
-    .gt('expires_at', new Date().toISOString())
+    .or(`expires_at.gt.${nowIso},expires_at.is.null`)
     .order('created_at', { ascending: false })
     .limit(20)
 

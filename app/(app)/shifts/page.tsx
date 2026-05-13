@@ -47,7 +47,7 @@ async function ClientShifts({ userId }: { userId: string }) {
         <Link
           href="/shifts/new"
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium"
-          style={{ background: '#1A1A1A', color: '#FFFFFF' }}
+          style={{ background: 'var(--btn-bg)', color: 'var(--btn-fg)' }}
         >
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -68,7 +68,7 @@ async function ClientShifts({ userId }: { userId: string }) {
           <Link
             href="/shifts/new"
             className="px-6 py-3 rounded-xl text-sm font-semibold"
-            style={{ background: '#1A1A1A', color: '#FFFFFF' }}
+            style={{ background: 'var(--btn-bg)', color: 'var(--btn-fg)' }}
           >
             Publicar turno
           </Link>
@@ -141,11 +141,12 @@ async function WorkerShifts({ userId, profile }: { userId: string; profile: any 
 
   const categoryIds = workerCats?.map(wc => wc.category_id) || []
 
+  const now = new Date().toISOString()
   let query = supabase
     .from('shifts')
     .select('*, categories(*), profiles(*)')
     .eq('status', 'open')
-    .gt('expires_at', new Date().toISOString())
+    .or(`expires_at.gt.${now},expires_at.is.null`)
     .order('shift_date', { ascending: true })
 
   if (categoryIds.length > 0) query = query.in('category_id', categoryIds)
