@@ -36,7 +36,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (user && isPublicPath) {
+  if (user && (pathname === '/login' || pathname.startsWith('/signup'))) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
