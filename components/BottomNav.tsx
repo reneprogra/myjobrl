@@ -172,7 +172,6 @@ export default function BottomNav({ userType }: { userType: string }) {
         style={{ paddingBottom: `calc(env(safe-area-inset-bottom) + 0.5rem)` }}>
         <Link
           href="/"
-          prefetch={false}
           className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl relative"
           style={{ color: 'var(--muted)' }}
         >
