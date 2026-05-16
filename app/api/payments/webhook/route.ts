@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { sendNotification } from '@/lib/send-notification'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,6 +62,15 @@ export async function POST(req: NextRequest) {
       status: 'succeeded',
       payment_method: paymentIntent.payment_method_types?.[0] || 'card',
     })
+
+    // Notify worker that payment was processed
+    const workerAmountFormatted = (workerAmount / 100).toLocaleString('es-MX')
+    await sendNotification(
+      workerId,
+      '💰 Pago recibido',
+      `Recibiste $${workerAmountFormatted} MXN por tu trabajo`,
+      '/dashboard',
+    )
   }
 
   return NextResponse.json({ received: true })

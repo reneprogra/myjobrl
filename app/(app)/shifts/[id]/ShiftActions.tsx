@@ -73,6 +73,27 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
       proposed_pay: proposedPay ? parseFloat(proposedPay) : null,
       message: message || null,
     })
+
+    // Notify the client that a worker applied
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', currentUserId)
+        .single()
+      const name = profile?.full_name || 'Un worker'
+      fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: shift.client_id,
+          title: '✅ Worker aceptado',
+          body: `${name} aceptó tu turno`,
+          url: `/shifts/${shift.id}`,
+        }),
+      }).catch(() => {})
+    } catch {}
+
     setLoading(false)
     setShowApplyForm(false)
     router.refresh()
@@ -131,6 +152,20 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
           content: '✅ El cliente ha confirmado que el trabajo fue completado. Espera el pago.',
         })
       }
+    }
+
+    // Notify the worker that the client confirmed completion
+    if (workerId) {
+      fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: workerId,
+          title: '🎉 Trabajo confirmado',
+          body: 'El cliente confirmó tu trabajo. El pago está en proceso.',
+          url: `/shifts/${shift.id}`,
+        }),
+      }).catch(() => {})
     }
 
     setLoading(false)

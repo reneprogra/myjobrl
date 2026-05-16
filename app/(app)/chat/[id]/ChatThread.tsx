@@ -13,6 +13,7 @@ interface OtherPerson {
 interface Props {
   conversationId: string
   currentUserId: string
+  currentUserName: string
   initialMessages: Message[]
   otherPerson: OtherPerson
 }
@@ -30,7 +31,7 @@ function formatMsgDate(dateStr: string) {
   return d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
-export default function ChatThread({ conversationId, currentUserId, initialMessages, otherPerson }: Props) {
+export default function ChatThread({ conversationId, currentUserId, currentUserName, initialMessages, otherPerson }: Props) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -124,6 +125,18 @@ export default function ChatThread({ conversationId, currentUserId, initialMessa
       setMessages(prev =>
         prev.map(m => (m.id === tempId ? (inserted as Message) : m))
       )
+
+      // Notify the other person
+      fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: otherPerson.id,
+          title: `💬 Nuevo mensaje de ${currentUserName}`,
+          body: content.slice(0, 50),
+          url: `/chat/${conversationId}`,
+        }),
+      }).catch(() => {})
     }
 
     setSending(false)

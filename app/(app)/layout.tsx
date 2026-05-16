@@ -1,6 +1,7 @@
 import BottomNav from '@/components/BottomNav'
 import DesktopSidebar from '@/components/layout/DesktopSidebar'
 import PageTransition from '@/components/PageTransition'
+import NotificationsProvider from '@/components/NotificationsProvider'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
@@ -38,6 +39,9 @@ export default async function AppLayout({
 
       {/* Bottom nav — hidden on desktop */}
       <BottomNav userType={userType} />
+
+      {/* Push notifications setup */}
+      <NotificationsProvider />
     </div>
   )
 }

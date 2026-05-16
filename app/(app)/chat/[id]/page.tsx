@@ -26,12 +26,11 @@ export default async function ChatThreadPage({ params }: { params: Promise<{ id:
 
   const otherId = conversation.client_id === user.id ? conversation.worker_id : conversation.client_id
 
-  // Fetch other person's profile
-  const { data: otherProfile } = await supabase
-    .from('profiles')
-    .select('id, full_name, avatar_url')
-    .eq('id', otherId)
-    .single()
+  // Fetch both profiles in parallel
+  const [{ data: otherProfile }, { data: currentProfile }] = await Promise.all([
+    supabase.from('profiles').select('id, full_name, avatar_url').eq('id', otherId).single(),
+    supabase.from('profiles').select('full_name').eq('id', user.id).single(),
+  ])
 
   if (!otherProfile) notFound()
 
@@ -98,6 +97,7 @@ export default async function ChatThreadPage({ params }: { params: Promise<{ id:
       <ChatThread
         conversationId={id}
         currentUserId={user.id}
+        currentUserName={currentProfile?.full_name || 'Alguien'}
         initialMessages={initialMessages}
         otherPerson={otherProfile}
       />

@@ -133,6 +133,19 @@ export default function NewShiftPage() {
       setError(error.message)
       setLoading(false)
     } else {
+      // Notify workers about the new shift
+      fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetCity: form.city,
+          targetUserType: 'worker',
+          title: '🔔 Nuevo turno disponible',
+          body: `${form.title} en ${form.city} — $${form.pay_amount} MXN`,
+          url: `/shifts/${data.id}`,
+        }),
+      }).catch(() => {})
+
       router.push(`/shifts/${data.id}`)
     }
   }
