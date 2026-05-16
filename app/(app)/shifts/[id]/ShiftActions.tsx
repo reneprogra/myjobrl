@@ -575,12 +575,17 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
             ✅ Trabajo confirmado. Realiza el pago a{' '}
             <span className="font-semibold">{acceptedApplication.profiles?.full_name || 'el worker'}</span>.
           </p>
+          {acceptedApplication.proposed_pay && (
+            <p className="text-xs" style={{ color: '#1E40AF' }}>
+              Monto acordado: ${acceptedApplication.proposed_pay.toLocaleString('es-MX')} MXN (contraoferta)
+            </p>
+          )}
           <Link
             href={`/payments/${shift.id}`}
             className="w-full py-4 rounded-2xl text-base font-bold text-center block"
             style={{ background: '#1877F2', color: '#FFFFFF' }}
           >
-            Pagar turno — ${shift.pay_amount.toLocaleString('es-MX')} MXN
+            Pagar turno — ${(acceptedApplication.proposed_pay ?? shift.pay_amount).toLocaleString('es-MX')} MXN
           </Link>
         </div>
       )}

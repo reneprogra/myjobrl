@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import Hero from "@/components/landing/Hero";
 import AboutSection from "@/components/landing/AboutSection";
 import FeaturedSection from "@/components/landing/FeaturedSection";
@@ -9,15 +7,6 @@ import FAQSection from "@/components/landing/FAQSection";
 import Footer from "@/components/landing/Footer";
 
 export default async function Home() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (user) {
-    redirect("/dashboard");
-  }
-
   return (
     <main style={{ background: "#000" }}>
       <Hero />

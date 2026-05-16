@@ -31,12 +31,16 @@ export default async function PaymentPage({ params }: { params: Promise<{ shiftI
     redirect(`/shifts/${shiftId}`)
   }
 
+  const agreedAmount = acceptedApp.proposed_pay ?? shift.pay_amount
+
   // Payment intent is created client-side in PaymentPageClient via /api/payments/create-intent
   return (
     <PaymentPageClient
       shift={shift}
       workerName={acceptedApp.profiles?.full_name || 'Worker'}
       workerId={acceptedApp.worker_id}
+      agreedAmount={agreedAmount}
+      hasCounterOffer={!!acceptedApp.proposed_pay}
       publishableKey={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
     />
   )

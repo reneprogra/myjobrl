@@ -8,10 +8,11 @@ interface Props {
   workerName: string
   shiftDate: string
   amount: number
+  hasCounterOffer?: boolean
   shiftId: string
 }
 
-export default function PaymentForm({ shiftTitle, workerName, shiftDate, amount, shiftId }: Props) {
+export default function PaymentForm({ shiftTitle, workerName, shiftDate, amount, hasCounterOffer, shiftId }: Props) {
   const stripe = useStripe()
   const elements = useElements()
   const [loading, setLoading] = useState(false)
@@ -63,10 +64,17 @@ export default function PaymentForm({ shiftTitle, workerName, shiftDate, amount,
           <span>{shiftDate}</span>
         </div>
         <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border)' }}>
-          <span className="text-sm font-medium" style={{ color: 'var(--fg)' }}>Total a pagar</span>
-          <span className="text-xl font-bold" style={{ color: 'var(--fg)' }}>
-            ${amount.toLocaleString('es-MX')} MXN
+          <span className="text-sm font-medium" style={{ color: 'var(--fg)' }}>
+            {hasCounterOffer ? 'Monto acordado' : 'Total a pagar'}
           </span>
+          <div className="text-right">
+            <span className="text-xl font-bold" style={{ color: 'var(--fg)' }}>
+              ${amount.toLocaleString('es-MX')} MXN
+            </span>
+            {hasCounterOffer && (
+              <div className="text-xs" style={{ color: 'var(--muted)' }}>contraoferta aceptada</div>
+            )}
+          </div>
         </div>
       </div>
 

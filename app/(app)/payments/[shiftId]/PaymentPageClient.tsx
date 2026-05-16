@@ -10,6 +10,8 @@ interface Props {
   shift: any
   workerName: string
   workerId: string
+  agreedAmount: number
+  hasCounterOffer: boolean
   publishableKey: string
 }
 
@@ -18,7 +20,7 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'long' })
 }
 
-export default function PaymentPageClient({ shift, workerName, workerId, publishableKey }: Props) {
+export default function PaymentPageClient({ shift, workerName, workerId, agreedAmount, hasCounterOffer, publishableKey }: Props) {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const stripePromise = useMemo(() => loadStripe(publishableKey), [publishableKey])
@@ -29,7 +31,7 @@ export default function PaymentPageClient({ shift, workerName, workerId, publish
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         shiftId: shift.id,
-        amount: shift.pay_amount,
+        amount: agreedAmount,
         workerId,
       }),
     })
@@ -46,7 +48,7 @@ export default function PaymentPageClient({ shift, workerName, workerId, publish
         setError('Error de conexión al servidor de pagos')
         console.error('Payment fetch error:', err)
       })
-  }, [shift.id, shift.pay_amount, workerId])
+  }, [shift.id, agreedAmount, workerId])
 
   return (
     <div className="px-4 py-6">
@@ -90,7 +92,8 @@ export default function PaymentPageClient({ shift, workerName, workerId, publish
             shiftTitle={shift.title}
             workerName={workerName}
             shiftDate={formatDate(shift.shift_date)}
-            amount={shift.pay_amount}
+            amount={agreedAmount}
+            hasCounterOffer={hasCounterOffer}
             shiftId={shift.id}
           />
         </Elements>

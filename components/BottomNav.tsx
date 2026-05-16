@@ -170,6 +170,19 @@ export default function BottomNav({ userType }: { userType: string }) {
     >
       <div className="flex items-center justify-around px-2 py-2 max-w-lg mx-auto"
         style={{ paddingBottom: `calc(env(safe-area-inset-bottom) + 0.5rem)` }}>
+        <Link
+          href="/"
+          prefetch={false}
+          className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl relative"
+          style={{ color: 'var(--muted)' }}
+        >
+          <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
+          </svg>
+          <span className="text-xs font-medium" style={{ fontFamily: 'var(--font-dm-sans)' }}>Ver sitio</span>
+        </Link>
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href)
           return (

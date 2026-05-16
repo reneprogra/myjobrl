@@ -25,13 +25,13 @@ export default function Hero() {
       {/* Background image */}
       <div className="absolute inset-0">
         <Image
-          src="/images/hero.png"
-          alt="Worker en calle mexicana al atardecer"
+          src="/images/hero-new.jpg"
+          alt="Hombre joven sonriendo en calle urbana al atardecer"
           fill
           priority
           className="object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/85" />
       </div>
 
       {/* Navbar */}
