@@ -5,6 +5,7 @@ import StarRating from '@/components/StarRating'
 import PortfolioUploader from '@/components/PortfolioUploader'
 import PortfolioGrid from '@/components/PortfolioGrid'
 import AvatarUpload from '@/components/AvatarUpload'
+import StripeConnectOnboarding from '@/components/payments/StripeConnectOnboarding'
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -64,6 +65,17 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       rating_count: realReviewCount,
       rating: realReviewCount > 0 ? parseFloat(realAvgRating.toFixed(2)) : 0,
     }).eq('id', id)
+  }
+
+  // Stripe Connect account (only needed for own worker profile)
+  let stripeAccount = null
+  if (isOwn && profile.user_type === 'worker') {
+    const { data } = await supabase
+      .from('stripe_accounts')
+      .select('stripe_account_id, status, charges_enabled, payouts_enabled')
+      .eq('user_id', id)
+      .single()
+    stripeAccount = data
   }
 
   // Completed shifts count
@@ -238,6 +250,16 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
               />
             </div>
           )
+        )}
+
+        {/* Stripe Connect — own worker profile only */}
+        {isOwn && profile.user_type === 'worker' && (
+          <div>
+            <h2 className="text-base font-semibold mb-2" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
+              Pagos
+            </h2>
+            <StripeConnectOnboarding stripeAccount={stripeAccount} />
+          </div>
         )}
 
         {/* Reviews — workers only */}
