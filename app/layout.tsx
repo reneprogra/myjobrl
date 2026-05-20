@@ -31,7 +31,11 @@ export default function RootLayout({
       className={`${plusJakartaSans.variable} h-full`}
     >
       <head>
+        <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icon-152x152.png" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/icon-120x120.png" />
+        <meta name="theme-color" content="#000000" />
         {/* Anti-FOUC: apply dark class before first paint */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}})()` }} />
       </head>
