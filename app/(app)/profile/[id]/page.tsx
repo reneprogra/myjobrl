@@ -229,7 +229,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             <h2 className="text-base font-semibold mb-2" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
               Pagos
             </h2>
-            <StripeConnectOnboarding stripeAccount={stripeAccount} />
+            <StripeConnectOnboarding stripeAccount={stripeAccount} stripeChargesEnabled={profile.stripe_charges_enabled ?? false} />
           </div>
         )}
 

@@ -12,14 +12,17 @@ interface StripeAccount {
 
 interface Props {
   stripeAccount: StripeAccount | null
+  /** Mirror of stripe_accounts.charges_enabled stored on profiles for reliability */
+  stripeChargesEnabled?: boolean
 }
 
-export default function StripeConnectOnboarding({ stripeAccount }: Props) {
+export default function StripeConnectOnboarding({ stripeAccount, stripeChargesEnabled }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
 
-  const isActive = stripeAccount?.charges_enabled && stripeAccount?.payouts_enabled
+  // Use profile-level flag as primary source; fall back to stripe_accounts row
+  const isActive = stripeChargesEnabled || (stripeAccount?.charges_enabled && stripeAccount?.payouts_enabled)
   const isPending = stripeAccount && !isActive
 
   async function handleSetup() {
@@ -59,10 +62,15 @@ export default function StripeConnectOnboarding({ stripeAccount }: Props) {
         className="flex items-center gap-3 p-4 rounded-2xl"
         style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}
       >
-        <div className="text-2xl">✅</div>
+        <div
+          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-base font-bold"
+          style={{ background: '#16A34A', color: '#FFFFFF' }}
+        >
+          ✓
+        </div>
         <div>
           <p className="text-sm font-semibold" style={{ color: '#15803D' }}>
-            Cuenta de pagos activa
+            ✓ Cuenta de pagos activada
           </p>
           <p className="text-xs mt-0.5" style={{ color: '#16A34A' }}>
             Recibirás pagos automáticamente en tu cuenta bancaria

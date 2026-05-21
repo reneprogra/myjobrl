@@ -43,7 +43,9 @@ export async function POST(req: NextRequest) {
     const status = chargesEnabled && payoutsEnabled ? 'active' : 'pending'
 
     const supabase = getServiceClient()
-    await supabase
+
+    // Update stripe_accounts and get the linked user_id
+    const { data: stripeAccRow } = await supabase
       .from('stripe_accounts')
       .update({
         charges_enabled: chargesEnabled,
@@ -52,6 +54,16 @@ export async function POST(req: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq('stripe_account_id', account.id)
+      .select('user_id')
+      .single()
+
+    // Mirror charges_enabled onto profiles for fast, reliable access
+    if (stripeAccRow?.user_id) {
+      await supabase
+        .from('profiles')
+        .update({ stripe_charges_enabled: chargesEnabled })
+        .eq('id', stripeAccRow.user_id)
+    }
   }
 
   return NextResponse.json({ received: true })
