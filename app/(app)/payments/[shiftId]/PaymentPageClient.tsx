@@ -53,7 +53,7 @@ export default function PaymentPageClient({ shift, workerName, workerId, agreedA
   return (
     <div className="px-4 py-6">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-4">
         <Link href={`/shifts/${shift.id}`} className="p-2 rounded-xl" style={{ background: 'var(--secondary-bg)' }}>
           <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <polyline points="15 18 9 12 15 6"/>
@@ -62,6 +62,17 @@ export default function PaymentPageClient({ shift, workerName, workerId, agreedA
         <h1 className="text-xl font-bold" style={{ color: 'var(--fg)' }}>
           Pagar turno
         </h1>
+      </div>
+
+      {/* Stripe security badge */}
+      <div
+        className="flex items-center gap-2 px-3 py-2 rounded-xl mb-5"
+        style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}
+      >
+        <span>🔒</span>
+        <span className="text-xs font-medium" style={{ color: '#1E40AF' }}>
+          Pagos protegidos por Stripe
+        </span>
       </div>
 
       {error && (

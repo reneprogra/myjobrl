@@ -1,11 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import StarRating from '@/components/StarRating'
 import PortfolioUploader from '@/components/PortfolioUploader'
 import PortfolioGrid from '@/components/PortfolioGrid'
 import AvatarUpload from '@/components/AvatarUpload'
 import StripeConnectOnboarding from '@/components/payments/StripeConnectOnboarding'
+import WorkerLevelBadge from '@/components/WorkerLevelBadge'
+import { getWorkerLevel, levelConfig, levelBenefits } from '@/lib/workerLevel'
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -53,16 +56,25 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     ? allRatings!.reduce((sum, r) => sum + r.rating, 0) / realReviewCount
     : 0
 
-  // Sync profile if values are out of date (fire-and-forget, don't await)
+  // Sync profile stats if out of date (fire-and-forget)
+  const syncPayload: Record<string, any> = {}
   if (
     realReviewCount !== profile.rating_count ||
     (realReviewCount > 0 && Math.abs(parseFloat(realAvgRating.toFixed(2)) - profile.rating) > 0.01)
   ) {
-    supabase.from('profiles').update({
-      rating_count: realReviewCount,
-      rating: realReviewCount > 0 ? parseFloat(realAvgRating.toFixed(2)) : 0,
-    }).eq('id', id).then(() => {})
+    syncPayload.rating_count = realReviewCount
+    syncPayload.rating = realReviewCount > 0 ? parseFloat(realAvgRating.toFixed(2)) : 0
   }
+  if ((completedCount ?? 0) !== (profile.completed_shifts_count ?? 0)) {
+    syncPayload.completed_shifts_count = completedCount ?? 0
+  }
+  if (Object.keys(syncPayload).length > 0) {
+    supabase.from('profiles').update(syncPayload).eq('id', id).then(() => {})
+  }
+
+  const workerLevel = profile.user_type === 'worker'
+    ? getWorkerLevel(completedCount ?? 0, realAvgRating)
+    : null
 
   const closedShiftsCount = acceptedAppsForSanction?.filter((app: any) => {
     if (!app.shifts) return false
@@ -129,6 +141,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                   style={{ background: '#1877F2', color: '#FFFFFF' }}>
                   ✓ Verificado
                 </span>
+              )}
+              {workerLevel && (
+                <WorkerLevelBadge level={workerLevel} completedCount={0} rating={0} size="md" />
               )}
             </div>
             {profile.has_warning && (
@@ -232,6 +247,90 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             <StripeConnectOnboarding stripeAccount={stripeAccount} stripeChargesEnabled={profile.stripe_charges_enabled ?? false} />
           </div>
         )}
+
+        {/* Reputación visual + Beneficios — workers only */}
+        {profile.user_type === 'worker' && workerLevel && (
+          <div className="flex flex-col gap-4">
+            {/* Reputación */}
+            <div className="p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+              <h2 className="text-base font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
+                Reputación
+              </h2>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-14 h-14 rounded-2xl flex-shrink-0"
+                  style={{ background: levelConfig[workerLevel].bg }}>
+                  <Image src={levelConfig[workerLevel].image} alt={levelConfig[workerLevel].label} width={36} height={36} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-base font-bold" style={{ color: levelConfig[workerLevel].color }}>
+                      Nivel {levelConfig[workerLevel].label}
+                    </span>
+                  </div>
+                  {realAvgRating > 0 && (
+                    <div className="flex items-center gap-2">
+                      <StarRating rating={realAvgRating} size={14} />
+                      <span className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>
+                        {realAvgRating.toFixed(1)}
+                      </span>
+                      <span className="text-xs" style={{ color: 'var(--muted)' }}>
+                        ({realReviewCount} reseña{realReviewCount !== 1 ? 's' : ''})
+                      </span>
+                    </div>
+                  )}
+                  <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                    {completedCount ?? 0} turno{(completedCount ?? 0) !== 1 ? 's' : ''} completado{(completedCount ?? 0) !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Beneficios */}
+            <div className="p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+              <h2 className="text-base font-semibold mb-3" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
+                Beneficios de nivel {levelConfig[workerLevel].label}
+              </h2>
+              <div className="flex flex-col gap-2">
+                {levelBenefits[workerLevel].map((benefit, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-base">✓</span>
+                    <span className="text-sm" style={{ color: 'var(--fg)' }}>{benefit}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Stripe badge in Payments section */}
+        {profile.user_type === 'worker' && (
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}
+          >
+            <span className="text-sm">🔒</span>
+            <span className="text-xs font-medium" style={{ color: '#1E40AF' }}>
+              Pagos protegidos por Stripe
+            </span>
+          </div>
+        )}
+
+        {/* Historial link */}
+        <Link
+          href="/historial"
+          className="flex items-center justify-between px-4 py-3.5 rounded-2xl"
+          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-lg">📊</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--fg)' }}>
+              {profile.user_type === 'worker' ? 'Historial de ganancias' : 'Historial de pagos'}
+            </span>
+          </div>
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </Link>
 
         {/* Reviews — workers only */}
         {profile.user_type === 'worker' && <div>

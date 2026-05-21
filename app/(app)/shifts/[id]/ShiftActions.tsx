@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import StarRating from '@/components/StarRating'
+import WorkerLevelBadge from '@/components/WorkerLevelBadge'
+import { getWorkerLevel, levelOrder } from '@/lib/workerLevel'
 
 interface Props {
   shift: any
@@ -364,6 +366,16 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
         >
           Aplicar al turno →
         </button>
+        <Link
+          href="/settings/report"
+          className="flex items-center gap-2 text-xs py-2 px-3 rounded-xl w-fit"
+          style={{ color: 'var(--muted)', background: 'var(--secondary-bg)' }}
+        >
+          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Reportar problema
+        </Link>
       </div>
     )
   }
@@ -419,7 +431,10 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
             Aplicantes ({applications.length})
           </h3>
           <div className="flex flex-col gap-3">
-            {applications.map((app: any) => (
+            {[...applications].sort((a: any, b: any) =>
+              levelOrder(getWorkerLevel(b.profiles?.completed_shifts_count ?? 0, b.profiles?.rating ?? 0)) -
+              levelOrder(getWorkerLevel(a.profiles?.completed_shifts_count ?? 0, a.profiles?.rating ?? 0))
+            ).map((app: any) => (
               <div key={app.id} className="p-4 rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-3 mb-3">
                   <Link href={`/profile/${app.worker_id}`}>
@@ -434,11 +449,16 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
                   </Link>
                   <div className="flex-1">
                     <Link href={`/profile/${app.worker_id}`}>
-                      <div className="font-medium text-sm" style={{ color: 'var(--fg)' }}>
+                      <div className="flex items-center gap-1.5 flex-wrap font-medium text-sm" style={{ color: 'var(--fg)' }}>
                         {app.profiles?.full_name}
                         {app.profiles?.is_verified && (
-                          <span className="ml-1 text-xs" style={{ color: '#1877F2' }}>✓</span>
+                          <span className="text-xs" style={{ color: '#1877F2' }}>✓</span>
                         )}
+                        <WorkerLevelBadge
+                          completedCount={app.profiles?.completed_shifts_count ?? 0}
+                          rating={app.profiles?.rating ?? 0}
+                          size="sm"
+                        />
                       </div>
                     </Link>
                     {app.profiles?.rating > 0 && (
@@ -555,6 +575,20 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
           <div className="text-3xl mb-2">👀</div>
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Aún no hay aplicantes</p>
         </div>
+      )}
+
+      {/* Report problem */}
+      {['open', 'in_progress', 'assigned', 'completed'].includes(shift.status) && (
+        <Link
+          href={`/settings/report`}
+          className="flex items-center gap-2 text-xs py-2 px-3 rounded-xl w-fit"
+          style={{ color: 'var(--muted)', background: 'var(--secondary-bg)' }}
+        >
+          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Reportar problema
+        </Link>
       )}
 
       {/* Payment section — after client clicks Finalizado (completed) */}
