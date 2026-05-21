@@ -64,7 +64,14 @@ export async function POST() {
 
     return NextResponse.json({ stripe_account_id: account.id })
   } catch (err: any) {
-    console.error('Stripe Connect create error:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('Stripe Connect create error:', JSON.stringify({
+      message: err.message,
+      type: err.type,
+      code: err.code,
+      statusCode: err.statusCode,
+      raw: err.raw,
+    }, null, 2))
+    const message = err?.raw?.message || err.message || 'Error desconocido'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

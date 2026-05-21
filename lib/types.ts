@@ -8,6 +8,7 @@ export interface Profile {
   city: string | null
   state: string | null
   bio: string | null
+  phone_number: string | null
   rating: number
   rating_count: number
   is_verified: boolean
@@ -116,25 +117,5 @@ export interface PortfolioPhoto {
   worker_id: string
   photo_url: string
   caption: string | null
-  created_at: string
-}
-
-export interface Conversation {
-  id: string
-  shift_id: string | null
-  client_id: string
-  worker_id: string
-  created_at: string
-  shifts?: { id: string; title: string }
-  client_profile?: Pick<Profile, 'id' | 'full_name' | 'avatar_url'>
-  worker_profile?: Pick<Profile, 'id' | 'full_name' | 'avatar_url'>
-}
-
-export interface Message {
-  id: string
-  conversation_id: string
-  sender_id: string
-  content: string
-  read: boolean
   created_at: string
 }

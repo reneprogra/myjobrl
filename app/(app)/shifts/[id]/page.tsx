@@ -4,6 +4,7 @@ import Link from 'next/link'
 import StarRating from '@/components/StarRating'
 import ShiftActions from './ShiftActions'
 import RealtimeRefresh from '@/components/RealtimeRefresh'
+import Stripe from 'stripe'
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr + 'T00:00:00')
@@ -18,8 +19,15 @@ function formatTime(t: string) {
   return `${h12}:${m} ${ampm}`
 }
 
-export default async function ShiftDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ShiftDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<Record<string, string>>
+}) {
   const { id } = await params
+  const { redirect_status, payment_intent: piId } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -62,7 +70,25 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
     .eq('shift_id', id)
     .eq('status', 'succeeded')
     .maybeSingle()
-  const isPaid = !!payment
+
+  let isPaid = !!payment
+
+  // Race-condition fix: Stripe redirects back before the webhook fires.
+  // When redirect_status=succeeded is in the URL, verify directly with Stripe
+  // so we don't have to wait for the webhook to insert the payment record.
+  if (!isPaid && redirect_status === 'succeeded' && piId) {
+    try {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+        apiVersion: '2026-04-22.dahlia',
+      })
+      const pi = await stripe.paymentIntents.retrieve(piId)
+      if (pi.status === 'succeeded' && pi.metadata?.shiftId === id) {
+        isPaid = true
+      }
+    } catch {
+      // Webhook will update the UI via Realtime once it fires
+    }
+  }
 
   const isClosed = ['assigned', 'in_progress'].includes(shift.status) &&
     new Date() > new Date(`${shift.shift_date}T${shift.shift_start}`)

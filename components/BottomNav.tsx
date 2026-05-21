@@ -2,16 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { createClient } from '@/lib/supabase/client'
+import { motion } from 'framer-motion'
 
 interface NavItem {
   href: string
   label: string
   icon: React.ReactNode
   activeIcon: React.ReactNode
-  badge?: number
 }
 
 function HomeIcon({ filled }: { filled?: boolean }) {
@@ -37,18 +34,6 @@ function BriefcaseIcon({ filled }: { filled?: boolean }) {
       <rect x="2" y="7" width="20" height="14" rx="2"/>
       <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
       <line x1="12" y1="12" x2="12" y2="12"/>
-    </svg>
-  )
-}
-
-function ChatIcon({ filled }: { filled?: boolean }) {
-  return filled ? (
-    <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-    </svg>
-  ) : (
-    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
     </svg>
   )
 }
@@ -83,47 +68,6 @@ function UserIcon({ filled }: { filled?: boolean }) {
 
 export default function BottomNav({ userType }: { userType: string }) {
   const pathname = usePathname()
-  const [unreadCount, setUnreadCount] = useState(0)
-
-  useEffect(() => {
-    const supabase = createClient()
-
-    async function fetchUnread() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { data: convs } = await supabase
-        .from('conversations')
-        .select('id')
-        .or(`client_id.eq.${user.id},worker_id.eq.${user.id}`)
-
-      if (!convs?.length) {
-        setUnreadCount(0)
-        return
-      }
-
-      const { count } = await supabase
-        .from('messages')
-        .select('id', { count: 'exact', head: true })
-        .in('conversation_id', convs.map(c => c.id))
-        .eq('read', false)
-        .neq('sender_id', user.id)
-
-      setUnreadCount(count || 0)
-    }
-
-    fetchUnread()
-
-    // Subscribe to message changes to update badge live
-    const channel = supabase
-      .channel('nav-unread')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, fetchUnread)
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
 
   const allNavItems: NavItem[] = [
     {
@@ -137,13 +81,6 @@ export default function BottomNav({ userType }: { userType: string }) {
       label: 'Turnos',
       icon: <BriefcaseIcon />,
       activeIcon: <BriefcaseIcon filled />,
-    },
-    {
-      href: '/chat',
-      label: 'Chat',
-      icon: <ChatIcon />,
-      activeIcon: <ChatIcon filled />,
-      badge: unreadCount,
     },
     {
       href: '/groups',
@@ -192,34 +129,14 @@ export default function BottomNav({ userType }: { userType: string }) {
               className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl relative"
               style={{ color: isActive ? 'var(--fg)' : 'var(--muted)' }}
             >
-              <div className="relative">
-                {/* Bounce animation when tab becomes active */}
-                <motion.div
-                  key={isActive ? `${item.href}-on` : `${item.href}-off`}
-                  initial={isActive ? { scale: 0.65 } : { scale: 1 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 18 }}
-                >
-                  {isActive ? item.activeIcon : item.icon}
-                </motion.div>
-
-                {/* Badge pop animation when count changes */}
-                <AnimatePresence>
-                  {item.badge != null && item.badge > 0 && (
-                    <motion.span
-                      key={item.badge}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0 }}
-                      transition={{ type: 'spring', stiffness: 600, damping: 20 }}
-                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center text-white font-bold"
-                      style={{ background: '#EF4444', fontSize: 9, lineHeight: 1 }}
-                    >
-                      {item.badge > 9 ? '9+' : item.badge}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </div>
+              <motion.div
+                key={isActive ? `${item.href}-on` : `${item.href}-off`}
+                initial={isActive ? { scale: 0.65 } : { scale: 1 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+              >
+                {isActive ? item.activeIcon : item.icon}
+              </motion.div>
               <span className="text-xs font-medium" style={{ fontFamily: 'var(--font-dm-sans)' }}>
                 {item.label}
               </span>

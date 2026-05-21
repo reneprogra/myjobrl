@@ -99,6 +99,7 @@ export default function SettingsClient({ profile, email }: Props) {
   const [bio, setBio] = useState(profile?.bio || '')
   const [city, setCity] = useState(profile?.city || '')
   const [state, setState] = useState(profile?.state || '')
+  const [phoneNumber, setPhoneNumber] = useState(profile?.phone_number || '')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [saving, setSaving] = useState(false)
@@ -151,6 +152,10 @@ export default function SettingsClient({ profile, email }: Props) {
   }
 
   async function handleSaveProfile() {
+    if (profile?.user_type === 'worker' && !phoneNumber.trim()) {
+      setMessage('El número de teléfono es obligatorio para workers')
+      return
+    }
     setSaving(true)
     const supabase = createClient()
     const { error } = await supabase.from('profiles').update({
@@ -158,6 +163,7 @@ export default function SettingsClient({ profile, email }: Props) {
       bio: bio || null,
       city: city || null,
       state: state || null,
+      phone_number: phoneNumber.trim() || null,
     }).eq('id', profile.id)
 
     setSaving(false)
@@ -264,6 +270,24 @@ export default function SettingsClient({ profile, email }: Props) {
               <input type="text" value={state} onChange={e => setState(e.target.value)} className="w-full px-4 py-3 rounded-xl text-sm outline-none" style={inputStyle} />
             </div>
           </div>
+          {profile?.user_type === 'worker' && (
+            <div>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--muted)' }}>
+                Teléfono <span style={{ color: '#DC2626' }}>*</span>
+              </label>
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={e => setPhoneNumber(e.target.value)}
+                placeholder="+52 229 123 4567"
+                className="w-full px-4 py-3 rounded-xl text-sm outline-none"
+                style={inputStyle}
+              />
+              <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                Visible para clientes que te contraten
+              </p>
+            </div>
+          )}
           <div className="flex gap-3">
             <button onClick={() => setEditProfile(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ background: 'var(--secondary-bg)', color: 'var(--fg)' }}>Cancelar</button>
             <button onClick={handleSaveProfile} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: 'var(--fg)', color: 'var(--bg)', opacity: saving ? 0.6 : 1 }}>{saving ? 'Guardando...' : 'Guardar'}</button>

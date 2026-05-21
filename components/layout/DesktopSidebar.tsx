@@ -30,18 +30,6 @@ function BriefcaseIcon({ filled }: { filled?: boolean }) {
   )
 }
 
-function ChatIcon({ filled }: { filled?: boolean }) {
-  return filled ? (
-    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-    </svg>
-  ) : (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-    </svg>
-  )
-}
-
 function GroupIcon({ filled }: { filled?: boolean }) {
   return filled ? (
     <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
@@ -82,7 +70,6 @@ export default function DesktopSidebar({ userType, profile }: Props) {
   const allNavItems = [
     { href: '/dashboard', label: 'Inicio', icon: <HomeIcon />, activeIcon: <HomeIcon filled /> },
     { href: '/shifts', label: 'Turnos', icon: <BriefcaseIcon />, activeIcon: <BriefcaseIcon filled /> },
-    { href: '/chat', label: 'Chat', icon: <ChatIcon />, activeIcon: <ChatIcon filled /> },
     { href: '/groups', label: 'Grupos', icon: <GroupIcon />, activeIcon: <GroupIcon filled /> },
     { href: '/profile', label: 'Perfil', icon: <UserIcon />, activeIcon: <UserIcon filled /> },
   ]
