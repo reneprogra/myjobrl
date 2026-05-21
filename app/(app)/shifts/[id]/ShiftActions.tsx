@@ -14,6 +14,7 @@ interface Props {
   applications: any[]
   acceptedApplication: any | null
   isClosed?: boolean
+  isPaid?: boolean
 }
 
 function CountdownTimer({ createdAt }: { createdAt: string }) {
@@ -53,7 +54,7 @@ function CountdownTimer({ createdAt }: { createdAt: string }) {
   )
 }
 
-export default function ShiftActions({ shift, isClient, currentUserId, myApplication, applications, acceptedApplication, isClosed }: Props) {
+export default function ShiftActions({ shift, isClient, currentUserId, myApplication, applications, acceptedApplication, isClosed, isPaid }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [showApplyForm, setShowApplyForm] = useState(false)
@@ -134,27 +135,8 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
     const supabase = createClient()
     await supabase.from('shifts').update({ status: 'completed' }).eq('id', shift.id)
 
-    // Notify the accepted worker via chat if a conversation exists
-    const workerId = acceptedApplication?.worker_id
-    if (workerId) {
-      const { data: conv } = await supabase
-        .from('conversations')
-        .select('id')
-        .eq('shift_id', shift.id)
-        .eq('client_id', currentUserId)
-        .eq('worker_id', workerId)
-        .maybeSingle()
-
-      if (conv) {
-        await supabase.from('messages').insert({
-          conversation_id: conv.id,
-          sender_id: currentUserId,
-          content: '✅ El cliente ha confirmado que el trabajo fue completado. Espera el pago.',
-        })
-      }
-    }
-
     // Notify the worker that the client confirmed completion
+    const workerId = acceptedApplication?.worker_id
     if (workerId) {
       fetch('/api/notifications/send', {
         method: 'POST',
@@ -225,33 +207,6 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
     router.refresh()
   }
 
-  async function handleOpenChat(workerId: string) {
-    setLoading(true)
-    const supabase = createClient()
-
-    const { data: existing } = await supabase
-      .from('conversations')
-      .select('id')
-      .eq('shift_id', shift.id)
-      .eq('client_id', currentUserId)
-      .eq('worker_id', workerId)
-      .maybeSingle()
-
-    if (existing) {
-      router.push(`/chat/${existing.id}`)
-      return
-    }
-
-    const { data: created } = await supabase
-      .from('conversations')
-      .insert({ shift_id: shift.id, client_id: currentUserId, worker_id: workerId })
-      .select('id')
-      .single()
-
-    setLoading(false)
-    if (created) router.push(`/chat/${created.id}`)
-  }
-
   // ─── Worker view ────────────────────────────────────────────────
   if (!isClient) {
     // Shift is no longer open and this worker didn't get it
@@ -274,14 +229,24 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
         return (
           <div className="p-4 rounded-2xl flex flex-col gap-2" style={{ background: '#DCFCE7', border: '1px solid #BBF7D0' }}>
             <div className="flex items-center gap-2">
-              <span className="text-xl">✅</span>
+              <span className="text-xl">{isPaid ? '💰' : '✅'}</span>
               <p className="text-sm font-semibold" style={{ color: '#166534' }}>
-                El cliente confirmó el trabajo
+                {isPaid ? 'Pago recibido — ¡Bien hecho!' : 'El cliente confirmó el trabajo'}
               </p>
             </div>
             <p className="text-xs" style={{ color: '#166534' }}>
-              El pago será procesado en breve. ¡Buen trabajo!
+              {isPaid
+                ? 'El pago fue procesado exitosamente.'
+                : 'El pago será procesado en breve. ¡Buen trabajo!'}
             </p>
+            {isPaid && (
+              <span
+                className="self-start text-xs font-semibold px-2 py-0.5 rounded-full mt-1"
+                style={{ background: '#166534', color: '#FFFFFF' }}
+              >
+                Pagado ✓
+              </span>
+            )}
           </div>
         )
       }
@@ -520,17 +485,6 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
                     <span className="text-xs font-medium px-2 py-1 rounded-full" style={{ background: '#DCFCE7', color: '#166534' }}>
                       ✓ Aceptado
                     </span>
-                    <button
-                      onClick={() => handleOpenChat(app.worker_id)}
-                      disabled={loading}
-                      className="text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1"
-                      style={{ background: 'var(--btn-bg)', color: 'var(--btn-fg)', opacity: loading ? 0.6 : 1 }}
-                    >
-                      <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-                      </svg>
-                      Abrir chat
-                    </button>
                     {shift.status === 'completed' && (
                       <button
                         onClick={() => setShowReviewForm(app.worker_id)}
@@ -603,26 +557,49 @@ export default function ShiftActions({ shift, isClient, currentUserId, myApplica
         </div>
       )}
 
-      {/* Payment button — only appears after client clicks Finalizado (completed) */}
+      {/* Payment section — after client clicks Finalizado (completed) */}
       {shift.status === 'completed' && acceptedApplication && (
-        <div className="p-4 rounded-2xl flex flex-col gap-3" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
-          <p className="text-sm font-medium" style={{ color: '#1E40AF' }}>
-            ✅ Trabajo confirmado. Realiza el pago a{' '}
-            <span className="font-semibold">{acceptedApplication.profiles?.full_name || 'el worker'}</span>.
-          </p>
-          {acceptedApplication.proposed_pay && (
-            <p className="text-xs" style={{ color: '#1E40AF' }}>
-              Monto acordado: ${acceptedApplication.proposed_pay.toLocaleString('es-MX')} MXN (contraoferta)
+        isPaid ? (
+          <div className="p-4 rounded-2xl flex flex-col gap-2" style={{ background: '#DCFCE7', border: '1px solid #BBF7D0' }}>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">💰</span>
+              <p className="text-sm font-semibold" style={{ color: '#166534' }}>
+                Pago completado
+              </p>
+              <span
+                className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                style={{ background: '#166534', color: '#FFFFFF' }}
+              >
+                Pagado ✓
+              </span>
+            </div>
+            <p className="text-xs" style={{ color: '#166534' }}>
+              El pago a <span className="font-semibold">{acceptedApplication.profiles?.full_name || 'el worker'}</span> fue procesado exitosamente.
             </p>
-          )}
-          <Link
-            href={`/payments/${shift.id}`}
-            className="w-full py-4 rounded-2xl text-base font-bold text-center block"
-            style={{ background: '#1877F2', color: '#FFFFFF' }}
-          >
-            Pagar turno — ${(acceptedApplication.proposed_pay ?? shift.pay_amount).toLocaleString('es-MX')} MXN
-          </Link>
-        </div>
+            <p className="text-xs" style={{ color: '#166534' }}>
+              Monto: ${(acceptedApplication.proposed_pay ?? shift.pay_amount).toLocaleString('es-MX')} MXN
+            </p>
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl flex flex-col gap-3" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+            <p className="text-sm font-medium" style={{ color: '#1E40AF' }}>
+              ✅ Trabajo confirmado. Realiza el pago a{' '}
+              <span className="font-semibold">{acceptedApplication.profiles?.full_name || 'el worker'}</span>.
+            </p>
+            {acceptedApplication.proposed_pay && (
+              <p className="text-xs" style={{ color: '#1E40AF' }}>
+                Monto acordado: ${acceptedApplication.proposed_pay.toLocaleString('es-MX')} MXN (contraoferta)
+              </p>
+            )}
+            <Link
+              href={`/payments/${shift.id}`}
+              className="w-full py-4 rounded-2xl text-base font-bold text-center block"
+              style={{ background: '#1877F2', color: '#FFFFFF' }}
+            >
+              Pagar turno — ${(acceptedApplication.proposed_pay ?? shift.pay_amount).toLocaleString('es-MX')} MXN
+            </Link>
+          </div>
+        )
       )}
     </div>
   )

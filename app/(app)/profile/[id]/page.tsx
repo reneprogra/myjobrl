@@ -10,91 +10,59 @@ import StripeConnectOnboarding from '@/components/payments/StripeConnectOnboardi
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+
+  // Phase 1: auth + profile in parallel
+  const [{ data: { user } }, { data: profile }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from('profiles').select('*').eq('id', id).single(),
+  ])
+
   if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', id)
-    .single()
-
   if (!profile) notFound()
 
   const isOwn = user.id === id
 
-  // Get worker categories
-  const { data: workerCats } = await supabase
-    .from('worker_categories')
-    .select('*, categories(*)')
-    .eq('worker_id', id)
+  // Phase 2: all remaining queries in parallel
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  // Get portfolio photos
-  const { data: photos } = await supabase
-    .from('portfolio_photos')
-    .select('*')
-    .eq('worker_id', id)
-    .order('created_at', { ascending: false })
-    .limit(6)
+  const [
+    { data: workerCats },
+    { data: photos },
+    { data: reviews },
+    { data: allRatings },
+    { count: completedCount },
+    { data: acceptedAppsForSanction },
+    stripeResult,
+  ] = await Promise.all([
+    supabase.from('worker_categories').select('*, categories(*)').eq('worker_id', id),
+    supabase.from('portfolio_photos').select('*').eq('worker_id', id).order('created_at', { ascending: false }).limit(6),
+    supabase.from('reviews').select('*, profiles!reviews_reviewer_id_fkey(*)').eq('reviewed_id', id).order('created_at', { ascending: false }).limit(10),
+    supabase.from('reviews').select('rating').eq('reviewed_id', id),
+    supabase.from('applications').select('*', { count: 'exact', head: true }).eq('worker_id', id).eq('status', 'accepted'),
+    supabase.from('applications').select('shifts(shift_date, shift_start, status, created_at)').eq('worker_id', id).eq('status', 'accepted').gte('created_at', thirtyDaysAgo.toISOString()),
+    isOwn && profile.user_type === 'worker'
+      ? supabase.from('stripe_accounts').select('stripe_account_id, status, charges_enabled, payouts_enabled').eq('user_id', id).single()
+      : Promise.resolve({ data: null, error: null }),
+  ])
 
-  // Get reviews for display (latest 10)
-  const { data: reviews } = await supabase
-    .from('reviews')
-    .select('*, profiles!reviews_reviewer_id_fkey(*)')
-    .eq('reviewed_id', id)
-    .order('created_at', { ascending: false })
-    .limit(10)
-
-  // Real count and average directly from reviews table (source of truth)
-  const { data: allRatings } = await supabase
-    .from('reviews')
-    .select('rating')
-    .eq('reviewed_id', id)
+  const stripeAccount = stripeResult.data
 
   const realReviewCount = allRatings?.length ?? 0
   const realAvgRating = realReviewCount > 0
     ? allRatings!.reduce((sum, r) => sum + r.rating, 0) / realReviewCount
     : 0
 
-  // Sync profile if values are out of date
+  // Sync profile if values are out of date (fire-and-forget, don't await)
   if (
     realReviewCount !== profile.rating_count ||
     (realReviewCount > 0 && Math.abs(parseFloat(realAvgRating.toFixed(2)) - profile.rating) > 0.01)
   ) {
-    await supabase.from('profiles').update({
+    supabase.from('profiles').update({
       rating_count: realReviewCount,
       rating: realReviewCount > 0 ? parseFloat(realAvgRating.toFixed(2)) : 0,
-    }).eq('id', id)
+    }).eq('id', id).then(() => {})
   }
-
-  // Stripe Connect account (only needed for own worker profile)
-  let stripeAccount = null
-  if (isOwn && profile.user_type === 'worker') {
-    const { data } = await supabase
-      .from('stripe_accounts')
-      .select('stripe_account_id, status, charges_enabled, payouts_enabled')
-      .eq('user_id', id)
-      .single()
-    stripeAccount = data
-  }
-
-  // Completed shifts count
-  const { count: completedCount } = await supabase
-    .from('applications')
-    .select('*', { count: 'exact', head: true })
-    .eq('worker_id', id)
-    .eq('status', 'accepted')
-
-  // Sanción temporal: >2 turnos cerrados (assigned + pasado su horario) en los últimos 30 días
-  const thirtyDaysAgo = new Date()
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-
-  const { data: acceptedAppsForSanction } = await supabase
-    .from('applications')
-    .select('shifts(shift_date, shift_start, status, created_at)')
-    .eq('worker_id', id)
-    .eq('status', 'accepted')
-    .gte('created_at', thirtyDaysAgo.toISOString())
 
   const closedShiftsCount = acceptedAppsForSanction?.filter((app: any) => {
     if (!app.shifts) return false
@@ -174,6 +142,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             )}
             {profile.city && (
               <p className="text-sm mt-1 opacity-70">📍 {profile.city}{profile.state ? `, ${profile.state}` : ''}</p>
+            )}
+            {profile.user_type === 'worker' && profile.phone_number && (
+              <p className="text-sm mt-1 opacity-70">📞 {profile.phone_number}</p>
             )}
             {profile.bio && (
               <p className="text-sm mt-2 opacity-80 leading-relaxed">{profile.bio}</p>

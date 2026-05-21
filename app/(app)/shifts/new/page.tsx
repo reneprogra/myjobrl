@@ -16,6 +16,7 @@ export default function NewShiftPage() {
     title: '',
     description: '',
     location_address: '',
+    house_number: '',
     city: '',
     state: '',
     pay_amount: '',
@@ -64,7 +65,8 @@ export default function NewShiftPage() {
           const city =
             addr.city || addr.town || addr.village || addr.municipality || ''
           const state = addr.state || ''
-          if (road) set('location_address', [road, number, suburb].filter(Boolean).join(', '))
+          if (road) set('location_address', [road, suburb].filter(Boolean).join(', '))
+          if (number) set('house_number', number)
           if (city) set('city', city)
           if (state) set('state', state)
         } catch {
@@ -107,12 +109,16 @@ export default function NewShiftPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
 
+    const fullAddress = form.house_number
+      ? `${form.location_address}, No. ${form.house_number}`
+      : form.location_address
+
     const { data, error } = await supabase.from('shifts').insert({
       client_id: user.id,
       category_id: form.category_id,
       title: form.title,
       description: form.description || null,
-      location_address: form.location_address,
+      location_address: fullAddress,
       city: form.city,
       state: form.state || null,
       pay_amount: parseFloat(form.pay_amount),
@@ -249,7 +255,23 @@ export default function NewShiftPage() {
             value={form.location_address}
             onChange={e => set('location_address', e.target.value)}
             required
-            placeholder="Calle, número, colonia"
+            placeholder="Calle, colonia"
+            className="w-full px-4 py-3 rounded-xl text-sm outline-none"
+            style={inputStyle}
+          />
+        </div>
+
+        {/* House / local number */}
+        <div>
+          <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--fg)' }}>
+            Número de casa/local *
+          </label>
+          <input
+            type="text"
+            value={form.house_number}
+            onChange={e => set('house_number', e.target.value)}
+            required
+            placeholder="ej. 42, Local B, Int. 3"
             className="w-full px-4 py-3 rounded-xl text-sm outline-none"
             style={inputStyle}
           />

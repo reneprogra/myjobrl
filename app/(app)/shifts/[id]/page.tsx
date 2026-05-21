@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import StarRating from '@/components/StarRating'
 import ShiftActions from './ShiftActions'
+import RealtimeRefresh from '@/components/RealtimeRefresh'
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr + 'T00:00:00')
@@ -54,6 +55,15 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
     ? (applications as any[])?.find((a: any) => a.status === 'accepted') ?? null
     : null
 
+  // Check if payment has been made for this shift
+  const { data: payment } = await supabase
+    .from('payments')
+    .select('id')
+    .eq('shift_id', id)
+    .eq('status', 'succeeded')
+    .maybeSingle()
+  const isPaid = !!payment
+
   const isClosed = ['assigned', 'in_progress'].includes(shift.status) &&
     new Date() > new Date(`${shift.shift_date}T${shift.shift_start}`)
 
@@ -70,12 +80,16 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div className="pb-8">
+      <RealtimeRefresh table="shifts" filter={`id=eq.${id}`} channelName={`shift-${id}`} />
+      <RealtimeRefresh table="applications" filter={`shift_id=eq.${id}`} channelName={`apps-${id}`} />
+      <RealtimeRefresh table="payments" filter={`shift_id=eq.${id}`} channelName={`payments-${id}`} />
+
       {/* Header */}
       <div
         className="px-4 pt-6 pb-6"
         style={{ background: '#1A1A1A', color: '#FFFFFF' }}
       >
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
           <Link
             href="/shifts"
             className="p-2 rounded-xl"
@@ -91,6 +105,14 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
           >
             {sc.label}
           </span>
+          {isPaid && (
+            <span
+              className="text-xs font-semibold px-2 py-0.5 rounded-full"
+              style={{ background: '#DCFCE7', color: '#166534' }}
+            >
+              Pagado ✓
+            </span>
+          )}
         </div>
 
         <div className="flex items-start gap-3">
@@ -171,6 +193,24 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
           </div>
         )}
 
+        {/* Worker contact banner — shown to client when shift has an accepted worker */}
+        {isClient && acceptedApplication && acceptedApplication.profiles?.phone_number && (
+          <div
+            className="px-4 py-3 rounded-2xl flex items-center gap-3"
+            style={{ background: '#DCFCE7', border: '1px solid #BBF7D0' }}
+          >
+            <svg width="18" height="18" fill="none" stroke="#166534" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.18 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z"/>
+            </svg>
+            <div>
+              <p className="text-xs font-semibold" style={{ color: '#166534' }}>Contacta a tu worker</p>
+              <p className="text-sm font-bold" style={{ color: '#166534' }}>
+                {acceptedApplication.profiles.phone_number}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Turno cerrado banner */}
         {isClosed && (
           <div className="px-4 py-3 rounded-2xl flex items-center gap-3" style={{ background: '#FEE2E2', border: '1px solid #FECACA' }}>
@@ -192,6 +232,7 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
           applications={isClient ? applications as any[] : []}
           acceptedApplication={acceptedApplication}
           isClosed={isClosed}
+          isPaid={isPaid}
         />
       </div>
     </div>

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import ShiftCard from '@/components/ShiftCard'
 import WorkerShiftsClient from './WorkerShiftsClient'
+import RealtimeRefresh from '@/components/RealtimeRefresh'
 import type { Shift } from '@/lib/types'
 
 export default async function ShiftsPage() {
@@ -22,12 +23,20 @@ export default async function ShiftsPage() {
 
 async function ClientShifts({ userId }: { userId: string }) {
   const supabase = await createClient()
-  const { data: shifts } = await supabase
-    .from('shifts')
-    .select('*, categories(*), profiles(*)')
-    .eq('client_id', userId)
-    .order('created_at', { ascending: false })
+  const [{ data: shifts }, { data: paidPayments }] = await Promise.all([
+    supabase
+      .from('shifts')
+      .select('*, categories(*), profiles(*)')
+      .eq('client_id', userId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('payments')
+      .select('shift_id')
+      .eq('client_id', userId)
+      .eq('status', 'succeeded'),
+  ])
 
+  const paidShiftIds = new Set(paidPayments?.map(p => p.shift_id) || [])
   const now = new Date().toISOString()
 
   const grouped = {
@@ -40,6 +49,7 @@ async function ClientShifts({ userId }: { userId: string }) {
 
   return (
     <div className="px-4 py-6">
+      <RealtimeRefresh table="shifts" filter={`client_id=eq.${userId}`} channelName={`shifts-client-${userId}`} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
           Mis turnos
@@ -76,19 +86,19 @@ async function ClientShifts({ userId }: { userId: string }) {
       ) : (
         <div className="flex flex-col gap-6">
           {grouped.open.length > 0 && (
-            <Section title="Abiertos" count={grouped.open.length} shifts={grouped.open} />
+            <Section title="Abiertos" count={grouped.open.length} shifts={grouped.open} paidShiftIds={paidShiftIds} />
           )}
           {grouped.assigned.length > 0 && (
-            <Section title="Asignados" count={grouped.assigned.length} shifts={grouped.assigned} />
+            <Section title="Asignados" count={grouped.assigned.length} shifts={grouped.assigned} paidShiftIds={paidShiftIds} />
           )}
           {grouped.completed.length > 0 && (
-            <Section title="Completados" count={grouped.completed.length} shifts={grouped.completed} />
+            <Section title="Completados" count={grouped.completed.length} shifts={grouped.completed} paidShiftIds={paidShiftIds} />
           )}
           {grouped.cancelled.length > 0 && (
-            <Section title="Cancelados" count={grouped.cancelled.length} shifts={grouped.cancelled} />
+            <Section title="Cancelados" count={grouped.cancelled.length} shifts={grouped.cancelled} paidShiftIds={paidShiftIds} />
           )}
           {grouped.expired.length > 0 && (
-            <Section title="Vencidos" count={grouped.expired.length} shifts={grouped.expired} statusOverride="expired" />
+            <Section title="Vencidos" count={grouped.expired.length} shifts={grouped.expired} statusOverride="expired" paidShiftIds={paidShiftIds} />
           )}
         </div>
       )}
@@ -101,11 +111,13 @@ function Section({
   count,
   shifts,
   statusOverride,
+  paidShiftIds,
 }: {
   title: string
   count: number
   shifts: Shift[]
   statusOverride?: string
+  paidShiftIds?: Set<string>
 }) {
   return (
     <div>
@@ -124,6 +136,7 @@ function Section({
             key={shift.id}
             shift={shift}
             applicationStatus={statusOverride}
+            isPaid={paidShiftIds?.has(shift.id)}
           />
         ))}
       </div>
@@ -155,6 +168,7 @@ async function WorkerShifts({ userId, profile }: { userId: string; profile: any 
 
   return (
     <div className="px-4 py-6">
+      <RealtimeRefresh table="shifts" channelName="shifts-worker-open" />
       <h1 className="text-2xl font-bold mb-6" style={{ fontFamily: 'var(--font-syne)', color: 'var(--fg)' }}>
         Turnos disponibles
       </h1>

@@ -10,6 +10,7 @@ interface ShiftCardProps {
   showClientRating?: boolean
   applicationStatus?: string
   distanceKm?: number
+  isPaid?: boolean
 }
 
 const statusColors: Record<string, { bg: string; text: string; label: string }> = {
@@ -51,7 +52,7 @@ function formatDistance(km: number): string {
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`
 }
 
-export default function ShiftCard({ shift, showClientRating, applicationStatus, distanceKm }: ShiftCardProps) {
+export default function ShiftCard({ shift, showClientRating, applicationStatus, distanceKm, isPaid }: ShiftCardProps) {
   const statusKey = computeStatusKey(shift, applicationStatus)
   const statusInfo = statusColors[statusKey] || statusColors.open
 
@@ -66,7 +67,7 @@ export default function ShiftCard({ shift, showClientRating, applicationStatus, 
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="text-xl">{shift.categories?.emoji}</span>
               <span
                 className="text-xs font-medium px-2 py-0.5 rounded-full"
@@ -74,6 +75,14 @@ export default function ShiftCard({ shift, showClientRating, applicationStatus, 
               >
                 {statusInfo.label}
               </span>
+              {isPaid && (
+                <span
+                  className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                  style={{ background: '#DCFCE7', color: '#166534' }}
+                >
+                  Pagado ✓
+                </span>
+              )}
             </div>
             <h3
               className="font-semibold text-base truncate"

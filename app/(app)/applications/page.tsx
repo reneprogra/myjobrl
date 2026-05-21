@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import ShiftCard from '@/components/ShiftCard'
+import RealtimeRefresh from '@/components/RealtimeRefresh'
 
 export default async function ApplicationsPage() {
   const supabase = await createClient()
@@ -10,11 +11,20 @@ export default async function ApplicationsPage() {
   const { data: profile } = await supabase.from('profiles').select('user_type').eq('id', user.id).single()
   if (profile?.user_type !== 'worker') redirect('/dashboard')
 
-  const { data: applications } = await supabase
-    .from('applications')
-    .select('*, shifts(*, categories(*), profiles(*))')
-    .eq('worker_id', user.id)
-    .order('created_at', { ascending: false })
+  const [{ data: applications }, { data: paidPayments }] = await Promise.all([
+    supabase
+      .from('applications')
+      .select('*, shifts(*, categories(*), profiles(*))')
+      .eq('worker_id', user.id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('payments')
+      .select('shift_id')
+      .eq('worker_id', user.id)
+      .eq('status', 'succeeded'),
+  ])
+
+  const paidShiftIds = new Set(paidPayments?.map(p => p.shift_id) || [])
 
   const statusLabels: Record<string, string> = {
     pending: 'Pendientes',
@@ -30,6 +40,8 @@ export default async function ApplicationsPage() {
 
   return (
     <div className="px-4 py-6">
+      <RealtimeRefresh table="applications" filter={`worker_id=eq.${user.id}`} channelName={`apps-worker-${user.id}`} />
+      <RealtimeRefresh table="shifts" channelName="apps-shifts-worker" />
       <h1 className="text-2xl font-bold mb-6" style={{ fontFamily: 'var(--font-syne)', color: '#1A1A1A' }}>
         Mis aplicaciones
       </h1>
@@ -64,6 +76,7 @@ export default async function ApplicationsPage() {
                         key={app.id}
                         shift={app.shifts as any}
                         applicationStatus={app.status}
+                        isPaid={paidShiftIds.has((app.shifts as any).id)}
                       />
                     )
                   ))}
