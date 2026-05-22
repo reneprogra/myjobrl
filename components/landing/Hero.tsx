@@ -25,7 +25,7 @@ export default function Hero() {
       {/* Background image */}
       <div className="absolute inset-0">
         <Image
-          src="/images/hero-new.jpg"
+          src="/images/hero-new2.jpg"
           alt="Hombre joven sonriendo en calle urbana al atardecer"
           fill
           priority
