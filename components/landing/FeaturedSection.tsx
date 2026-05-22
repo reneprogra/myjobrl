@@ -20,7 +20,7 @@ export default function FeaturedSection() {
           <div className="block md:hidden">
             <div className="rounded-3xl overflow-hidden aspect-[4/3] relative">
               <Image
-                src="/images/app-mockup.png"
+                src="/images/app-mockup2.jpg"
                 alt="MyJob app mockup"
                 fill
                 loading="lazy"
@@ -48,7 +48,7 @@ export default function FeaturedSection() {
           {/* Desktop: image with overlay */}
           <div className="hidden md:block rounded-3xl overflow-hidden aspect-video relative">
             <Image
-              src="/images/app-mockup.png"
+              src="/images/app-mockup2.jpg"
               alt="MyJob app mockup"
               fill
               loading="lazy"
